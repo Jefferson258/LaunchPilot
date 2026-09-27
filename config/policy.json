@@ -1,0 +1,49 @@
+{
+  "_comment": "Authoritative gate list for LaunchPilot. Ship flags on `pilot run` are opt-in CLI overrides of the stop-at-PR default.",
+  "auto_allowed": [
+    "code",
+    "build",
+    "qa",
+    "commit",
+    "push_branch",
+    "open_pr",
+    "deploy_web_preview",
+    "appstore_submit_dry_run"
+  ],
+  "requires_explicit_flag": [
+    "deploy_web_prod",
+    "testflight_upload",
+    "appstore_submit_execute",
+    "run_with_ship_prod",
+    "run_with_ship_testflight",
+    "run_with_ship_appstore"
+  ],
+  "requires_owner_approval": [
+    "app_store_submit",
+    "db_migration",
+    "edge_function_secret_change",
+    "domain_change",
+    "flip_live_mode",
+    "publish_legal_copy"
+  ],
+  "never_without_per_action_approval": [
+    "force_push",
+    "history_rewrite",
+    "destructive_sql",
+    "mass_delete",
+    "secret_rotation",
+    "spend_money"
+  ],
+  "branch_prefix": "pilot/",
+  "ship_flags": {
+    "_comment": "CLI only — never implied by products.json alone. --ship never includes App Store submit.",
+    "run": [
+      "--ship-preview",
+      "--ship-prod",
+      "--ship-testflight",
+      "--ship-appstore",
+      "--ship"
+    ],
+    "app_store_submit": "optional — pilot appstore-submit <product> --dry-run (safe) or --confirm / run --ship-appstore (real). Not covered by --ship."
+  }
+}

@@ -1,0 +1,72 @@
+name: Feature
+description: A product or tooling change that is not a bug.
+title: "[feature] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Features that spend money, change legal copy, or go live stay owner-gated.
+  - type: dropdown
+    id: product
+    attributes:
+      label: Product
+      options:
+        - Juicd (iOS)
+        - Juicd (website)
+        - Corvim (iOS)
+        - Corvim (website)
+        - Velour Closet (iPad)
+        - Velour Closet (website)
+        - LaunchPilot
+        - MarketingPilot
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build / URL
+      description: TestFlight build, git SHA, or site URL this would change. Optional for net-new work.
+      placeholder: "Juicd TF 10 / SHA abc1234"
+  - type: input
+    id: device
+    attributes:
+      label: Device / browser
+      description: Hardware + OS or browser if the request is surface-specific.
+      placeholder: "iPhone 16, iOS 26.0 / Safari iPad"
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Who is blocked and what they cannot do today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The smallest change that would help. Not a design essay.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Done when
+      description: Checks an agent or reviewer can tick.
+      placeholder: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Priority
+      options:
+        - P0 — ship blocker
+        - P1 — next
+        - P2 — soon
+        - P3 — later
+    validations:
+      required: true

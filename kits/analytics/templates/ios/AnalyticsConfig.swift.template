@@ -1,0 +1,45 @@
+// Template: copy to <Product>/Services/Analytics/AnalyticsConfig.swift and
+// replace every `{{APP}}` with the product's env-var prefix (e.g. CORVIM, JUICD).
+//
+// Same env-first, then-Info.plist, then-default pattern already used by
+// SupabaseConfig in this codebase, so it's consistent and testable the same way.
+import Foundation
+
+enum {{App}}AnalyticsConfig {
+    /// "debug" (default — no network, safe with no account), "telemetrydeck", or "none".
+    static var provider: String {
+        (env("{{APP}}_ANALYTICS_PROVIDER") ?? plist("{{APP}}_ANALYTICS_PROVIDER") ?? "debug")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .lowercased()
+    }
+
+    /// Non-secret app identifier some providers need (e.g. TelemetryDeck app ID). Empty when unset.
+    static var appID: String {
+        (env("{{APP}}_ANALYTICS_APP_ID") ?? plist("{{APP}}_ANALYTICS_APP_ID") ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    /// Master kill switch. Defaults on; set `{{APP}}_ANALYTICS_ENABLED=0` to disable everywhere.
+    static var isEnabled: Bool {
+        let raw = (env("{{APP}}_ANALYTICS_ENABLED") ?? plist("{{APP}}_ANALYTICS_ENABLED") ?? "1")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return !(raw == "0" || raw.lowercased() == "false")
+    }
+
+    /// Where the local, never-uploaded debug JSONL log lives (Documents dir), or nil to disable file logging.
+    static var debugFileURL: URL? {
+        guard let dir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else {
+            return nil
+        }
+        return dir.appendingPathComponent("analytics-debug-events.jsonl")
+    }
+
+    private static func env(_ key: String) -> String? {
+        let v = ProcessInfo.processInfo.environment[key]
+        return (v != nil && !v!.isEmpty) ? v : nil
+    }
+
+    private static func plist(_ key: String) -> String? {
+        (Bundle.main.infoDictionary?[key] as? String).flatMap { $0.isEmpty ? nil : $0 }
+    }
+}

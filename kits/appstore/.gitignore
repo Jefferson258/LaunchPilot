@@ -1,0 +1,6 @@
+# Owner listing assets (often large / marketing-specific). Scripts stay tracked.
+products/*/screenshots/
+products/*/.DS_Store
+.DS_Store
+__pycache__/
+*.pyc

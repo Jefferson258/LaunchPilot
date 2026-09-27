@@ -1,0 +1,10 @@
+{
+  "name": "launchpilot-agent",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Cursor SDK coding step for LaunchPilot",
+  "dependencies": {
+    "@cursor/sdk": "*"
+  }
+}

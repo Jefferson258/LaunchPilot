@@ -1,0 +1,49 @@
+{
+  "demo-site": {
+    "name": "Northline (bundled demo site)",
+    "type": "web",
+    "repo": "examples/demo-site",
+    "web_build": "npm run build",
+    "qa_cmd": "npm run qa:screenshots",
+    "qa_out": "qa-screenshots",
+    "qa_min_pngs": 2,
+    "qa_strict": true,
+    "auto_ship": false,
+    "notes": "Ships inside LaunchPilot. Run: ./bin/pilot demo. auto_ship is documentary only — CLI --ship* still required."
+  },
+  "my-app": {
+    "name": "My iOS app (template)",
+    "type": "app",
+    "repo": "MyApp",
+    "tf_key": "myapp",
+    "qa_cmd": "./scripts/capture-qa-screenshots.sh",
+    "qa_out": "qa-screenshots",
+    "qa_min_pngs": 4,
+    "qa_required": "01-home.png,02-main.png",
+    "qa_strict": true,
+    "auto_ship": false,
+    "analytics_provider": "debug",
+    "analytics_debug": true,
+    "analytics_app_id_env": "MYAPP_ANALYTICS_APP_ID",
+    "analytics_enabled": true,
+    "analytics_debug_file": "Documents/analytics-debug-events.jsonl",
+    "notes": "Sibling under PILOT_WORKSPACE. Prefer wrapping LaunchPilot kits/qa/ios-uitest-capture.sh. See docs/VISUAL_QA.md + docs/SETUP.md. Analytics fields: see docs/ANALYTICS.md + kits/analytics/README.md."
+  },
+  "my-site": {
+    "name": "My marketing site (template)",
+    "type": "web",
+    "repo": "MySite",
+    "web_build": "npm run build",
+    "qa_cmd": "npm run qa:screenshots",
+    "qa_out": "qa-screenshots",
+    "qa_min_pngs": 8,
+    "vercel_project": "my-site",
+    "qa_strict": true,
+    "auto_ship": false,
+    "analytics_provider": "none",
+    "analytics_app_id_env": "",
+    "analytics_enabled": false,
+    "analytics_debug_file": "",
+    "notes": "Point qa:screenshots at LaunchPilot kits/qa/web-capture.mjs (see juicd-website/scripts/capture-qa-screenshots.mjs). Analytics: drop in kits/analytics/templates/web/beacon.js when ready — see kits/analytics/README.md."
+  }
+}

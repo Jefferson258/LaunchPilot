@@ -1,0 +1,8 @@
+*.env
+*.jar
+metabase.db*
+*.log
+*.pid
+*.err
+plugins/
+metabase-db-ids.json

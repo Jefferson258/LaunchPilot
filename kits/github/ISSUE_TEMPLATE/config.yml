@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Launch Command Center (Notion)
+    url: https://app.notion.com/p/ce12da3033f84861a49353acdf19d520
+    about: Owner/agent launch board. Do not put secrets, tokens, or customer data here.

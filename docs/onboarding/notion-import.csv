@@ -1,0 +1,44 @@
+Task,App,Owner,Status,Phone OK?,Notes
+Form single-member LLC + get EIN,Business,You,You,Yes,Texas SOS online + IRS EIN — doable in Safari on iPhone
+Open LLC bank account,Business,You,You,Partial,Start on phone; some banks need ID verification on desktop
+Sign operating agreement + IP assignment,Business,You,Backlog,Partial,Read/sign on phone if PDF/e-sign; drafting easier on Mac
+Apple Developer: accept agreements / plan Org migration,Business,You,You,Yes,developer.apple.com works in Safari; App Store Connect app for some items
+Generate App Store Connect API key (.p8),Business,You,You,No,Requires Mac — .p8 downloads once and must be saved locally
+Fill TestFlight/config.sh once key exists,Business,Agent,Waiting on Access,No,Agent/Mac task after you create the key
+Rotate the exposed GitHub token (Corvim remote),Business,You,You,Partial,GitHub mobile app or Safari — revoke old token first
+Set up 1Password vault for all credentials,Business,You,Backlog,Yes,1Password iOS app is ideal for this
+Confirm iPad-only vs Universal (name is Velour Closet),Velour Closet,You,You,Yes,Product name decided: Velour Closet. Still confirm iPad-only vs Universal.
+Register App ID com.velour.VelourCloset,Velour Closet,You,You,Partial,Safari on developer.apple.com is cramped; easier on iPad/Mac
+Create App Store Connect app record,Velour Closet,You,You,Yes,App Store Connect iOS app works well
+Buy velourcloset.app domain,Velour Closet,You,You,Yes,Namecheap/registrar apps or Safari
+Approve 1024x1024 app icon,Velour Closet,You,Backlog,Yes,Preview image in Files/Photos and approve
+Capture iPad QA screenshots,Velour Closet,Agent,Waiting on Access,No,Mac + Xcode/simulator
+Deploy VelourClosetWebsite on Vercel,Velour Closet,Agent,Waiting on Access,No,Agent/Mac task
+Draft listing copy + App Privacy answers,Velour Closet,Agent,Agent Ready,Partial,You can review drafts on phone
+Review privacy/terms wording,Velour Closet,You,Backlog,Yes,Read in Notion or Safari
+Archive + upload to TestFlight,Velour Closet,Agent,Waiting on Access,No,Mac + Xcode/scripts
+Submit for review,Velour Closet,You,Backlog,Yes,App Store Connect iOS app
+Register App ID + capabilities (Sign in HealthKit Push),Corvim,You,You,Partial,developer.apple.com — better on Mac/iPad
+Create App Store Connect app record,Corvim,You,You,Yes,App Store Connect app
+Buy corvim.app domain,Corvim,You,You,Yes,Registrar app or Safari
+Create Supabase project (or invite agent),Corvim,You,You,Partial,Supabase dashboard on phone is limited; creating project works
+Run Supabase migrations + create buckets,Corvim,Agent,Waiting on Access,No,Agent task
+Deploy Corvim-Website + privacy/terms,Corvim,Agent,Waiting on Access,No,Agent task
+Paid Apps agreement + banking (if subscriptions),Corvim,You,Backlog,Partial,App Store Connect app for agreements; banking may need desktop
+Draft listing copy + capture screenshots,Corvim,Agent,Agent Ready,Partial,Review copy on phone; screenshots are Mac
+Review health/wellness claims (not medical),Corvim,You,Backlog,Yes,Read legal drafts on phone
+Archive + upload to TestFlight,Corvim,Agent,Waiting on Access,No,Mac task
+Submit for review,Corvim,You,Backlog,Yes,App Store Connect app
+Register App ID juicd.Juicd + Sign in with Apple,Juicd,You,You,Partial,developer.apple.com
+Create App Store Connect app record,Juicd,You,You,Yes,App Store Connect app
+Buy juicd.app domain,Juicd,You,You,Yes,Registrar
+Create Supabase project (or invite agent),Juicd,You,You,Partial,Supabase dashboard
+Run migrations + deploy play-board / resolve-play-slip,Juicd,Agent,Waiting on Access,No,Agent task
+Keep odds_mode = simulated for beta,Juicd,Agent,Agent Ready,No,Agent task
+(Later) Odds API account for live odds,Juicd,You,Backlog,Yes,the-odds-api.com signup in Safari
+(If ads) AdMob + Google payments/tax,Juicd,You,Backlog,Partial,AdMob signup works on phone; tax forms easier on desktop
+Counsel review: contest/gambling posture (Texas),Juicd,Counsel,Waiting on Counsel,Yes,Email/docs on phone; decision needs counsel
+Deploy site (legal pages after counsel OK),Juicd,Agent,Waiting on Counsel,No,Agent after you/counsel approve copy
+Draft listing + review notes (virtual points no betting),Juicd,Agent,Agent Ready,Yes,Review drafts on phone before submit
+Archive + upload to TestFlight (simulated),Juicd,Agent,Waiting on Access,No,Mac task
+Submit for review (after counsel sign-off),Juicd,You,Backlog,Yes,App Store Connect app — only after counsel OK

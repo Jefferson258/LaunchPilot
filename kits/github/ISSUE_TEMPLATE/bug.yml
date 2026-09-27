@@ -1,0 +1,86 @@
+name: Bug
+description: Something is broken in an app, website, or LaunchPilot.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do **not** paste API keys, tokens, passwords, `.p8` files, customer records, or full payment details.
+  - type: dropdown
+    id: product
+    attributes:
+      label: Product
+      options:
+        - Juicd (iOS)
+        - Juicd (website)
+        - Corvim (iOS)
+        - Corvim (website)
+        - Velour Closet (iPad)
+        - Velour Closet (website)
+        - LaunchPilot
+        - MarketingPilot
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Build / URL
+      description: TestFlight build number, git SHA, or the site URL where you saw this.
+      placeholder: "Juicd TF 10 / corvim.app / SHA abc1234"
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device / browser
+      description: Hardware + OS, or browser + viewport. Simulator is OK.
+      placeholder: "iPhone 16, iOS 26.0 / Safari iPad / watchOS 11"
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps from a cold start if you can.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - P0 — outage or data loss
+        - P1 — core path broken
+        - P2 — degraded / edge case
+        - P3 — cosmetic or request
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Xcode console, Safari Web Inspector, or function logs. Redact secrets first. Leave empty if none.
+      render: text
+  - type: textarea
+    id: regression
+    attributes:
+      label: Regression test
+      description: How we would prove this is fixed (tap path, screenshot, or test name).

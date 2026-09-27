@@ -1,0 +1,9 @@
+{
+  "name": "launchpilot-analytics-web-templates",
+  "private": true,
+  "type": "module",
+  "description": "Not a real package — just makes `node --test beacon.test.mjs` treat beacon.js as ESM. Copy beacon.js into a site's public/ as a plain <script type=\"module\"> file; this package.json is not meant to be copied.",
+  "scripts": {
+    "test": "node --test beacon.test.mjs"
+  }
+}
