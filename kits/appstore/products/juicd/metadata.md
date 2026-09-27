@@ -15,9 +15,9 @@
 | **Primary category** | Sports |
 | **Secondary category** | Entertainment |
 | **Copyright** | © 2026 Broken Watch Software LLC |
-| **Support URL** | https://juicd.vercel.app |
-| **Marketing URL** | https://juicd.vercel.app |
-| **Privacy Policy URL** | https://juicd.vercel.app/privacy |
+| **Support URL** | https://juicdsports.com |
+| **Marketing URL** | https://juicdsports.com |
+| **Privacy Policy URL** | https://juicdsports.com/privacy |
 
 ---
 
@@ -51,9 +51,9 @@ Juicd is free and supported by advertising. No in-app purchases.
 
 For entertainment purposes only. Must be 18+.
 
-Official rules: https://juicd.vercel.app/contest-rules  
-Privacy: https://juicd.vercel.app/privacy  
-Terms: https://juicd.vercel.app/terms
+Official rules: https://juicdsports.com/contest-rules  
+Privacy: https://juicdsports.com/privacy  
+Terms: https://juicdsports.com/terms
 
 ---
 
@@ -93,9 +93,9 @@ ODDS: Shared board uses SIMULATED data (Supabase runtime config odds_mode=simula
 
 SIGN-IN: Sign in with Apple is available.
 
-CONTEST RULES: https://juicd.vercel.app/contest-rules
-PRIVACY: https://juicd.vercel.app/privacy
-TERMS: https://juicd.vercel.app/terms
+CONTEST RULES: https://juicdsports.com/contest-rules
+PRIVACY: https://juicdsports.com/privacy
+TERMS: https://juicdsports.com/terms
 
 Apple is not a sponsor of any tournament or promotion in the app.
 
