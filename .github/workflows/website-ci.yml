@@ -1,0 +1,56 @@
+# This workflow intentionally checks only the bundled demo site. The three
+# real websites are private sibling repositories, so a GITHUB_TOKEN scoped to
+# LaunchPilot cannot check them out. See docs/WEBSITE_CI.md for safe local and
+# per-repository guidance; do not add a PAT or other checkout secret here.
+name: Website build, typecheck, and QA
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "examples/demo-site/**"
+      - "kits/qa/**"
+      - ".github/workflows/website-ci.yml"
+  pull_request:
+    paths:
+      - "examples/demo-site/**"
+      - "kits/qa/**"
+      - ".github/workflows/website-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  demo-site:
+    name: Bundled demo site
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: examples/demo-site
+    steps:
+      - name: Check out LaunchPilot
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: examples/demo-site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build website
+        run: npm run build
+
+      - name: Typecheck when configured
+        run: npm run typecheck --if-present
+
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
+      - name: Run visual QA
+        run: npm run qa:screenshots

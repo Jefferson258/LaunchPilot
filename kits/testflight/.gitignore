@@ -1,0 +1,8 @@
+# Local secrets + owner product registry for this kit
+config.sh
+apps.sh
+*.p8
+build/
+*.xcarchive
+export/
+.DS_Store

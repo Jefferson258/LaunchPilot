@@ -1,0 +1,30 @@
+# secrets / local config
+config/pilot.env
+config/products.json
+*.local
+.env
+
+# kits — secrets + local app registries + heavy ASC screenshots
+kits/testflight/config.sh
+kits/testflight/apps.sh
+kits/testflight/*.p8
+kits/testflight/build/
+kits/testflight/*.xcarchive
+kits/testflight/export/
+kits/appstore/products/*/screenshots/
+
+# job logs + evidence
+jobs/
+
+# node
+node_modules/
+agent/node_modules/
+examples/**/node_modules/
+examples/**/dist/
+examples/**/qa-screenshots/
+
+# ignore root lockfiles if any; keep agent + demo locks tracked
+/package-lock.json
+
+# os
+.DS_Store

@@ -1,0 +1,14 @@
+{
+  "name": "launchpilot-demo-site",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Bundled demo marketing site for LaunchPilot build/qa smoke tests",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "qa:screenshots": "node scripts/qa-screenshots.mjs",
+    "start": "npx --yes serve dist -p 4173"
+  },
+  "devDependencies": {
+    "playwright": "^1.52.0"
+  }
+}

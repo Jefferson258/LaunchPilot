@@ -1,0 +1,69 @@
+// Template: copy to <Product>/Services/Analytics/{{App}}Analytics.swift and
+// replace every `{{App}}` / `{{APP}}`. This is the only file view code should
+// import/call — it wires config -> providers -> the shared AnalyticsClient
+// and adds a few named convenience events every product wants.
+//
+// Requires the core files copied alongside it (from
+// LaunchPilot/kits/analytics/Sources/AnalyticsCore/*.swift, unchanged):
+//   AnalyticsEvent.swift, AnalyticsNaming.swift, AnalyticsPrivacy.swift,
+//   AnalyticsProvider.swift, AnalyticsDebugSink.swift, AnalyticsClient.swift
+import Foundation
+
+enum {{App}}Analytics {
+    /// Exposed so QA / a debug overlay / UITests can inspect what fired without touching the network.
+    static let debugSink = AnalyticsDebugSink(fileURL: {{App}}AnalyticsConfig.debugFileURL, logToConsole: isDebugBuild)
+
+    static let shared: AnalyticsClient = {
+        var providers: [AnalyticsProvider] = []
+        switch {{App}}AnalyticsConfig.provider {
+        case "none":
+            break
+        case "telemetrydeck":
+            providers.append(debugSink) // keep local visibility even with a real provider
+            if let td = TelemetryDeckProvider(appID: {{App}}AnalyticsConfig.appID) {
+                providers.append(td)
+            }
+        default: // "debug"
+            providers.append(debugSink)
+        }
+        return AnalyticsClient(
+            providers: providers,
+            isEnabled: {{App}}AnalyticsConfig.isEnabled,
+            onInvalidEvent: { message in
+                #if DEBUG
+                print("[{{App}}Analytics] \(message)")
+                #endif
+            }
+        )
+    }()
+
+    // MARK: - Convenience events (see LaunchPilot docs/ANALYTICS.md §4 for the naming convention)
+
+    static func logAppOpen(coldStart: Bool = true) {
+        shared.log("app_open", params: ["cold_start": .bool(coldStart)])
+    }
+
+    static func logTabView(_ tab: String) {
+        shared.log("tab_view", params: ["tab": .string(tab)])
+    }
+
+    static func logSignIn(method: String) {
+        shared.log("sign_in", params: ["method": .string(method)])
+    }
+
+    static func logSignOut() {
+        shared.log("sign_out")
+    }
+
+    static func logScreenView(_ screen: String) {
+        shared.log("screen_view", params: ["screen": .string(screen)])
+    }
+
+    private static var isDebugBuild: Bool {
+        #if DEBUG
+        true
+        #else
+        false
+        #endif
+    }
+}

@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+# LaunchPilot CLI — orchestrate a Cursor agent through the change pipeline.
+set -euo pipefail
+
+BIN_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+LP_DIR="$(cd "$BIN_DIR/.." && pwd)"
+S="$LP_DIR/scripts"
+source "$S/lib.sh"
+
+usage() {
+  cat <<'EOF'
+LaunchPilot — drive a Cursor agent from idea to TestFlight/web deploy.
+
+Usage: pilot <command> [args]
+
+  preflight                      Readiness report (tools, auth, config, repos)
+  demo                           Build + QA the bundled demo site (no API keys)
+  products                       List configured products
+  build <product>                Compile/build check
+  qa <product>                   Capture visual-QA screenshots
+  code <product> "<prompt>"      Run Cursor agent on a fresh pilot/* branch
+  release <product> "<msg>" [--pr]   Commit + push branch, optionally open PR
+  deploy <product> [--prod]      Vercel deploy (preview default; --prod gated)
+  testflight <product> --confirm Archive + upload to TestFlight (gated)
+  appstore-submit <product> [--dry-run|--confirm]
+                                 Optional ASC Submit for Review (dry-run default;
+                                 --confirm real; never implied by --ship)
+  run <product> "<prompt>" [--ship…]  Full pipeline to PR; optional ship flags:
+                                   --ship-preview   web preview deploy after PR
+                                   --ship-prod      web production deploy after PR
+                                   --ship-testflight  TestFlight upload after PR
+                                   --ship-appstore  ASC Submit for Review after PR
+                                   --ship           shorthand (web→prod, app→TF;
+                                                    never App Store submit)
+  remote-run <product> "<prompt>" [ship…] [--sleep|--shutdown|--stay-awake]
+                                 Phone/SSH: caffeinate + run + sleep/shutdown
+  remote-check                   Readiness for sleep-wake / M4 cold-boot paths
+  dispatch [--retry-failed|--recover-running|--recover-lock]
+                                 Dispatch or manually recover an intake job
+  watch-spikes [--dry-run]       Error-spike check → alerts/GitHub/ntfy (no auto-ship)
+  watch-status [--require-running] Check error-spike launchd installation/status
+  http-smoke <url> [route …]     Read-only HTTP smoke check for a deployment
+
+Products are listed in config/products.json (copy from products.example.json).
+Visual QA shared kit: kits/qa/ (see kits/qa/README.md and docs/VISUAL_QA.md).
+Run `pilot demo` for a no-credentials smoke test, or `pilot products` to list keys.
+Phone remote docs: docs/PHONE.md and docs/shortcuts-iphone.md.
+Gates live in config/policy.json. Default `pilot run` stops at PR. Production
+deploy / TestFlight / App Store submit only happen with an explicit --ship* flag
+(or the matching standalone command). --ship never triggers App Store submit.
+EOF
+}
+
+cmd="${1:-}"; shift || true
+case "$cmd" in
+  preflight)  bash "$S/preflight.sh" "$@" ;;
+  demo)       bash "$S/demo.sh" "$@" ;;
+  products)   list_products ;;
+  build)      bash "$S/build.sh" "$@" ;;
+  qa)         bash "$S/qa.sh" "$@" ;;
+  code)       bash "$S/code.sh" "$@" ;;
+  release)    bash "$S/release.sh" "$@" ;;
+  deploy)     bash "$S/deploy-web.sh" "$@" ;;
+  testflight) bash "$S/testflight.sh" "$@" ;;
+  appstore-submit) bash "$S/appstore-submit.sh" "$@" ;;
+  remote-run) bash "$S/remote-run.sh" "$@" ;;
+  remote-check) bash "$S/remote-setup-check.sh" "$@" ;;
+  dispatch)   bash "$LP_DIR/intake/dispatch.sh" "$@" ;;
+  watch-status) bash "$S/watch-spikes-status.sh" "$@" ;;
+  http-smoke) bash "$S/http-smoke.sh" "$@" ;;
+  watch-spikes)
+    python3 "$LP_DIR/kits/ops/watch-error-spikes.py" "$@"
+    ;;
+  run)        run_pipeline "$@" ;;
+  ""|-h|--help|help) usage ;;
+  *) err "unknown command: $cmd"; echo; usage; exit 1 ;;
+esac
