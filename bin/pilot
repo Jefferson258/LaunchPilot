@@ -22,9 +22,10 @@ Usage: pilot <command> [args]
   release <product> "<msg>" [--pr]   Commit + push branch, optionally open PR
   deploy <product> [--prod]      Vercel deploy (preview default; --prod gated)
   testflight <product> --confirm Archive + upload to TestFlight (gated)
-  appstore-submit <product> [--dry-run|--confirm]
+  appstore-submit <product> [--dry-run|--confirm] [--phased|--no-phased]
                                  Optional ASC Submit for Review (dry-run default;
-                                 --confirm real; never implied by --ship)
+                                 --confirm real; --phased = Apple phased ramp,
+                                 default = regular; never implied by --ship)
   run <product> "<prompt>" [--ship…]  Full pipeline to PR; optional ship flags:
                                    --ship-preview   web preview deploy after PR
                                    --ship-prod      web production deploy after PR
