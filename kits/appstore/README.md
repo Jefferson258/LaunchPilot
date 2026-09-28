@@ -27,12 +27,16 @@ Create a folder per app key (must match keys in `push-metadata.py` /
 python3 kits/appstore/overlay-screenshots.py       # optional marketing frames
 python3 kits/appstore/push-metadata.py juicd       # positional app key
 
-# Submit for Review — dry-run (safe) vs execute
+# Submit for Review — dry-run (safe) vs execute; default = regular release
 python3 kits/appstore/submit-for-review.py juicd --dry-run
+python3 kits/appstore/submit-for-review.py juicd --dry-run --phased
 # Prefer the Pilot wrapper (sets env gate for --execute):
 ../../bin/pilot appstore-submit juicd-app --dry-run
-../../bin/pilot appstore-submit juicd-app --confirm   # real submit
+../../bin/pilot appstore-submit juicd-app --confirm --phased   # real submit + phased
 ```
+
+`--phased` / `--no-phased` choose Apple's Phased Release vs regular (default).
+Pause / Release to All stay in ASC UI. See [docs/ROLLOUT.md](../../docs/ROLLOUT.md).
 
 Requires: `pip3 install pyjwt cryptography` (and Pillow for overlays).
 

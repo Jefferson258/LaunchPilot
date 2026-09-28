@@ -27,6 +27,32 @@ submit.
 org + bank gate. When that happens, prefer Phased Release on the first public
 update.
 
+### LaunchPilot: phased vs regular submit
+
+`pilot appstore-submit` defaults to a **regular** (immediate) release. Pass
+`--phased` to create Apple's Phased Release for Automatic Updates on the
+editable App Store version before Submit for Review:
+
+```bash
+# Regular / immediate (default) — dry-run then confirm
+./bin/pilot appstore-submit juicd-app --dry-run
+./bin/pilot appstore-submit juicd-app --confirm
+
+# Phased Release (7-day ramp for automatic updates only)
+./bin/pilot appstore-submit juicd-app --dry-run --phased
+./bin/pilot appstore-submit juicd-app --confirm --phased
+
+# Explicit regular (same as omitting both flags; cancels a planned INACTIVE phased release)
+./bin/pilot appstore-submit juicd-app --confirm --no-phased
+```
+
+Phased Release applies to **version updates only** (not the first public
+version). Pause and **Release to All** are managed in the App Store Connect UI
+— LaunchPilot does not automate those. See Apple:
+[Release a version update in phases](https://developer.apple.com/help/app-store-connect/update-your-app/release-a-version-update-in-phases)
+and the
+[App Store Version Phased Releases API](https://developer.apple.com/documentation/appstoreconnectapi/app-store-version-phased-releases).
+
 ## Websites (Vercel)
 
 **Hobby (current plan): production is 100%.** A `--prod` deploy becomes the
