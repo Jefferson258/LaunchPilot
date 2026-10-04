@@ -234,8 +234,6 @@ LaunchPilot is the shipping spine behind:
 | **Velour Closet** | SwiftUI / iPad-first | Same kits, separate product entry |
 | Marketing sites | Next/Vercel | Production only with `--ship-prod` |
 
-If you are evaluating the author: this repo is the “I don’t just write features — I build the system that ships them safely” artifact.
-
 ---
 
 ## Docs map
