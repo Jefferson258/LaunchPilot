@@ -1,0 +1,14 @@
+{
+  "_comment": "Copy to dashboards.local.json (gitignored). env_prefix selects <PREFIX>_HOST/_USER/_PASSWORD/... in supabase-connections.env. metabase_db_id is the Metabase database id (or set it in metabase-db-ids.json keyed by env_prefix).",
+  "timezone": "UTC",
+  "collection": "App health",
+  "products": [
+    {
+      "label": "Example App",
+      "env_prefix": "EXAMPLE",
+      "metabase_db_id": 2,
+      "events_table": "analytics_events",
+      "errors_table": "app_errors"
+    }
+  ]
+}

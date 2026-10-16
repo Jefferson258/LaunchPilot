@@ -1,11 +1,10 @@
 # Launch Command Center → Notion
 
-**Live board:** [Launch Command Center](https://app.example.com/launch-board) (created via Notion MCP)
+Optional: a Notion board as a phone-friendly status cockpit for launch
+blockers and owner decisions. LaunchPilot works without it
+(`PILOT_NOTION_ENABLED=0` by default).
 
-**Agent / new Mac setup:** [AGENT_SETUP.md](AGENT_SETUP.md)  
-**Phone workflow:** [PHONE_AGENT_WORKFLOW.md](PHONE_AGENT_WORKFLOW.md)
-
-Use the CSV import below only if you need to recreate the board on a fresh Notion workspace.
+Build the board by hand or import a CSV with the columns listed in Step 2.
 
 ---
 
@@ -23,10 +22,7 @@ Sign in with Apple or email.
 1. Open Notion → **New page** → name it **Launch Command Center**
 2. Type `/table` → choose **Table – Full page** (or **Board** after import)
 3. Click **⋯** (top right of the database) → **Merge with CSV** / **Import** → **CSV**
-4. Select `notion-import.csv` from this folder:
-   ```
-   ~/Desktop/LaunchCommandCenter/notion-import.csv
-   ```
+4. Select your CSV (columns: Task, App, Owner, Status, Phone OK?, Notes)
 5. Map columns if prompted:
    - **Task** → Title
    - **App** → Select
@@ -72,9 +68,9 @@ Use the **Flow** view for the kanban; column order follows the list above.
 |-----------|--------|
 | **My tasks** | Owner = You, Status ≠ Done |
 | **Blocked on you** | Owner = You, Status = To Do Next |
-| **Example App legal** | App = Example App, Owner = Counsel |
+| **Legal review** | App = Example App, Owner = Counsel |
 | **Phone tonight** | Phone OK? = Yes, Owner = You, Status ≠ Done |
-| **Demo App first** | App = DemoApp |
+| **One app first** | App = Example App |
 
 ---
 
@@ -82,9 +78,7 @@ Use the **Flow** view for the kanban; column order follows the list above.
 
 Repo checklists (source of truth for *how* to do each task):
 
-- `Sample App/YOUR_LAUNCH_CHECKLIST.md`
-- `exampleapp/YOUR_LAUNCH_CHECKLIST.md`
-- `DemoApp/YOUR_LAUNCH_CHECKLIST.md`
+- `<YourApp>/YOUR_LAUNCH_CHECKLIST.md` (one per product repo)
 
 Notion = **status cockpit**. Repos = **step-by-step instructions**.
 

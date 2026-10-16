@@ -10,7 +10,7 @@ prompt → Cursor agent on a fresh branch → build → visual QA → commit →
 
 Production deploys, TestFlight uploads, and App Store Connect submit are **never** implied. They only run when you pass an explicit `--ship*` flag (or the matching standalone command). `--ship` never means App Store submit.
 
-Built so other builders can reuse the pattern — and so hiring managers can see how Your Name ships **Sample App**, **Example App**, and **Demo App** with one gated pipeline instead of a pile of one-off scripts.
+Built so any indie developer or small studio can ship several apps and sites with one gated pipeline instead of a pile of one-off scripts. Everything product- or account-specific lives in local, gitignored config; the repo ships only templates and a demo.
 
 > **Status:** production-used locally for App Store / TestFlight / Vercel shipping. Bundled `demo-site` works with zero API keys.
 
@@ -68,7 +68,7 @@ flowchart LR
 Requires **Node 20+**. First visual QA may download Playwright Chromium.
 
 ```bash
-git clone https://github.com/<your-account>/LaunchPilot.git
+git clone https://github.com/<your-account>/LaunchPilot.git   # your fork or copy
 cd LaunchPilot
 ./bin/pilot demo
 ```
@@ -99,9 +99,15 @@ cp config/products.example.json config/products.json
 # edit products.json — keep demo-site, add your apps/sites
 
 # iOS uploads (optional):
-cp kits/testflight/config.example.sh kits/testflight/config.sh
-cp kits/testflight/apps.example.sh kits/testflight/apps.sh
+cp kits/testflight/config.example.sh kits/testflight/config.local.sh
+cp kits/testflight/apps.example.sh kits/testflight/apps.local.sh
 # edit those; keep ASC .p8 under ~/.appstoreconnect/ — see docs/SETUP.md
+./kits/testflight/archive-and-upload.sh example --dry-run   # checks config, uploads nothing
+
+# App Store listing / error-spike watcher / dashboards (optional):
+cp kits/appstore/apps.example.json kits/appstore/apps.local.json
+cp kits/ops/products.example.json kits/ops/products.local.json
+cp kits/metabase/dashboards.example.json kits/metabase/dashboards.local.json
 
 (cd agent && npm install)   # only needed for `pilot code` / `pilot run`
 ./bin/pilot preflight
@@ -116,10 +122,8 @@ workspace/                 ← PILOT_WORKSPACE
   LaunchPilot/             ← this repo
     examples/demo-site/
     kits/testflight/       ← secrets gitignored
-  Sample App/
-  Example App/
-  DemoApp/
-  *-website/
+  ExampleApp/              ← your iOS app repo
+  ExampleSite/             ← your marketing site repo
 ```
 
 **Secrets map:** [docs/SETUP.md](docs/SETUP.md) · [SECURITY.md](SECURITY.md).
@@ -223,18 +227,23 @@ Before flipping the GitHub repo to **Public**:
 
 ---
 
-## Portfolio context
+## Local configuration reference
 
-LaunchPilot is the shipping spine behind:
+Every kit reads its real values from local, gitignored files. Copy the committed
+template, then edit:
 
-| Product | Stack (high level) | Role of LaunchPilot |
+| Kit | Local file (gitignored) | Template (committed) |
 |---|---|---|
-| **Sample App** | SwiftUI, watchOS, Supabase, StoreKit | Build/QA/PR + gated TestFlight |
-| **Example App** | SwiftUI, Supabase, AdMob | Same loop; ads-safe shipping habits |
-| **Demo App** | SwiftUI / iPad-first | Same kits, separate product entry |
-| Marketing sites | Next/Vercel | Production only with `--ship-prod` |
+| Core | `config/pilot.env`, `config/products.json` | `config/pilot.env.example`, `config/products.example.json` |
+| TestFlight | `kits/testflight/config.local.sh`, `kits/testflight/apps.local.sh` (`config.sh` / `apps.sh` also accepted) | `config.example.sh`, `apps.example.sh` |
+| App Store | `kits/appstore/apps.local.json`, `kits/appstore/products/<app>/` | `apps.example.json`, `products/example/` |
+| Ops (spikes) | `kits/ops/products.local.json` | `products.example.json` |
+| Dashboards | `kits/metabase/dashboards.local.json`, `kits/metabase/supabase-connections.env` | `dashboards.example.json`, `supabase-connections.env.example` |
+| launchd | `~/Library/LaunchAgents/*.plist` | `kits/*/com.launchpilot.*.plist.example` |
 
-If you are evaluating the author: this repo is the “I don’t just write features — I build the system that ships them safely” artifact.
+TestFlight group behavior: `post-upload.sh` attaches each build to **internal**
+tester groups only, unless you list external groups in
+`EXTERNAL_BETA_GROUP_IDS` — see [kits/testflight/README.md](kits/testflight/README.md).
 
 ---
 

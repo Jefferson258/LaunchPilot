@@ -28,3 +28,14 @@ examples/**/qa-screenshots/
 
 # os
 .DS_Store
+
+# owner-only local config + private notes (never commit)
+local/
+*.local
+*.local.*
+.env.local
+.env.*.local
+kits/appstore/products/*
+!kits/appstore/products/example/
+kits/metabase/com.launchpilot.metabase.plist
+kits/ops/com.launchpilot.watch-spikes.plist

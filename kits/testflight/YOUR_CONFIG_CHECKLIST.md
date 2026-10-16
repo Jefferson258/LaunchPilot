@@ -1,20 +1,26 @@
-# TestFlight config — your checklist (~10 minutes)
+# TestFlight config — checklist (~10 minutes)
 
-The automation kit needs `config.sh` (gitignored). Until this exists, scripts like `archive-and-upload.sh` will stop with a clear error.
+The kit needs two local, gitignored files. Until they exist, scripts stop with
+a clear error.
 
-## Step 1 — Copy the template
+| File | Template | Holds |
+|---|---|---|
+| `config.local.sh` (or `config.sh`) | `config.example.sh` | Team ID + ASC API key |
+| `apps.local.sh` (or `apps.sh`) | `apps.example.sh` | Xcode projects, bundle IDs, ASC app IDs, optional external groups |
 
-On your Mac (or ask the agent after you paste values into 1Password):
+## Step 1 — Copy the templates
 
 ```bash
-cp ~/Desktop/TestFlight/config.example.sh ~/Desktop/TestFlight/config.sh
+cd kits/testflight
+cp config.example.sh config.local.sh
+cp apps.example.sh apps.local.sh
 ```
 
-## Step 2 — Fill these four values
+## Step 2 — Fill the credentials
 
 | Variable | Where to get it |
 |----------|-----------------|
-| `TEAM_ID` | [developer.apple.com/account](https://developer.apple.com/account) → Membership → **Team ID** (Example App project already uses `YOUR_TEAM_ID` if same account) |
+| `TEAM_ID` | [developer.apple.com/account](https://developer.apple.com/account) → Membership → **Team ID** |
 | `ASC_KEY_ID` | App Store Connect → Users and Access → **Integrations** → Keys → create key with **App Manager** role |
 | `ASC_ISSUER_ID` | Same Integrations page (top of Keys section) |
 | `ASC_KEY_PATH` | Path to the `.p8` file you download **once** when creating the key |
@@ -27,36 +33,28 @@ mv ~/Downloads/AuthKey_XXXXXXXXXX.p8 ~/.appstoreconnect/private_keys/
 chmod 600 ~/.appstoreconnect/private_keys/AuthKey_XXXXXXXXXX.p8
 ```
 
-Update `ASC_KEY_PATH` in `config.sh` to match.
+## Step 3 — Add your apps
 
-## Step 3 — Verify (Mac)
+One `case` per app in `apps.local.sh`, and list the keys in `TF_APP_KEYS`.
+The key must match `tf_key` in `config/products.json`.
 
-```bash
-~/Desktop/TestFlight/verify-key.sh
-~/Desktop/TestFlight/build-check.sh all    # Example App + DemoApp + Sample App compile
-```
-
-Requires `gh auth login` on the Mac if pushing doc changes from agent workflows (see `LaunchCommandCenter/AGENT_SETUP.md`).
-
-## Step 4 — What the agent can run after config exists
+## Step 4 — Verify
 
 ```bash
-~/Desktop/TestFlight/archive-and-upload.sh exampleapp
-~/Desktop/TestFlight/archive-and-upload.sh demoapp
+./kits/testflight/verify-key.sh                      # key works, lists apps
+./kits/testflight/archive-and-upload.sh <app-key> --dry-run   # config resolves
+./kits/testflight/build-check.sh all                 # every app compiles
 ```
 
-Requires: App Store Connect **app records** already created for each bundle ID.
+## Step 5 — Upload
 
-## Phone-friendly version
+```bash
+./kits/testflight/archive-and-upload.sh <app-key>
+```
 
-You can do Steps 2’s **Apple portal parts** on iPhone Safari:
-- Accept agreements in developer.apple.com
-- Create ASC API key (download `.p8` on Mac — **cannot** complete key setup on phone alone)
-
-Store the four values in **1Password** and message the agent: “ASC key is in 1Password vault X” — never paste the `.p8` contents in chat.
+Requires an App Store Connect **app record** for each bundle ID.
 
 ## Security
 
-- `config.sh` is gitignored — do not commit it
-- Rotate the exposed GitHub token on Sample App remote (separate task on your board)
-- Revoke old ASC keys if compromised
+- Local config files are gitignored — never commit them or paste `.p8` contents anywhere.
+- Revoke old ASC keys if compromised.

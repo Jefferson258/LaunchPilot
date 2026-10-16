@@ -44,8 +44,8 @@ else
 fi
 [[ -n "${CURSOR_API_KEY:-}" ]] && status "CURSOR_API_KEY" 1 "set"                    || status "CURSOR_API_KEY" 0 "missing (coding step)"
 [[ -n "${VERCEL_TOKEN:-}" ]]   && status "VERCEL_TOKEN" 1 "set"                       || status "VERCEL_TOKEN" 0 "missing (web deploy)"
-[[ -f "$TF_KIT/config.sh" ]] && status "kits/testflight/config.sh" 1 "present" || status "kits/testflight/config.sh" 0 "missing (uploads — docs/SETUP.md)"
-[[ -f "$TF_KIT/apps.sh" ]] && status "kits/testflight/apps.sh" 1 "present" || status "kits/testflight/apps.sh" 0 "missing (copy apps.example.sh)"
+[[ -f "$TF_KIT/config.local.sh" || -f "$TF_KIT/config.sh" ]] && status "testflight credentials" 1 "present" || status "testflight credentials" 0 "missing kits/testflight/config.local.sh (uploads — docs/SETUP.md)"
+[[ -f "$TF_KIT/apps.local.sh" || -f "$TF_KIT/apps.sh" ]] && status "testflight app registry" 1 "present" || status "testflight app registry" 0 "missing kits/testflight/apps.local.sh (copy apps.example.sh)"
 
 log "Cursor SDK"
 if [[ -d "$LP_DIR/agent/node_modules/@cursor/sdk" ]]; then

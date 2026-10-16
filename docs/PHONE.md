@@ -49,16 +49,16 @@ Prefer **`--sleep`** so you can wake again without a power button.
 
 ```bash
 export PATH="/opt/homebrew/bin:/usr/bin:/bin:$PATH"
-cd "$HOME/Desktop/LaunchPilot" || cd /path/to/LaunchPilot
+cd "$HOME/Desktop/LaunchPilot"   # wherever you cloned LaunchPilot
 ./bin/pilot remote-run demo-site "Phone smoke: tweak nothing, just prove remote-run" --sleep
 ```
 
 3. For a real product later (still no auto-ship unless you add a flag):
 
 ```bash
-./bin/pilot remote-run demoapp-app "Describe the change" --sleep
+./bin/pilot remote-run my-app "Describe the change" --sleep
 # intentional TestFlight:
-# ./bin/pilot remote-run demoapp-app "…" --ship-testflight --sleep
+# ./bin/pilot remote-run my-app "…" --ship-testflight --sleep
 ```
 
 4. Run the Shortcut from the Home Screen / Control Center.

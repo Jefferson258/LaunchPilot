@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """Build promotional App Store screenshots: branded canvas + headline + device shot.
 
+Usage: python3 overlay-screenshots.py [app-key ...]   (default: every app with "overlay")
+
 Reads originals from screenshots/raw/ (backs up from screenshots/ on first run),
 writes marketing PNGs into screenshots/ for ASC upload.
 """
@@ -14,59 +16,31 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parent
 
-COPY = {
-    "demoapp": {
-        "01-home.png": ("Your closet, curated", "Photograph pieces · plan looks · all on iPad"),
-        "02-closet.png": ("Every piece, organized", "Browse by category, color, and vibe"),
-        "03-closet-filter.png": ("Find it in a tap", "Filter your wardrobe without the dig"),
-        "04-item-detail.png": ("Rich item cards", "Tags, photos, and details that stick"),
-        "05-today.png": ("Swipe today’s outfit", "Mix tops, bottoms, shoes — then log it"),
-        "06-calendar.png": ("Your outfit history", "See what you wore, day by day"),
-    },
-    "sampleapp": {
-        "01-home.png": ("Train smarter", "Schedule, start, or get a recommended workout"),
-        "02-workout.png": ("Jump in or follow a plan", "Quick start · saved routines · form-aware cardio"),
-        "03-progress.png": ("See the work add up", "Sessions, trends, and what you actually lifted"),
-        "04-social.png": ("Train with friends", "Share finished workouts and cheer each other on"),
-        "05-groups.png": ("Team training", "Groups, invites, and coaching in one place"),
-    },
-    "exampleapp": {
-        "01-play.png": ("Build picks in seconds", "Virtual points only — no real-money wagering"),
-        "02-parlay.png": ("Mix picks your way", "Stack legs with virtual points — entertainment only"),
-        "03-tourney.png": ("Daily closest-pick tourneys", "One bracket a day. Closest wins. Zero stake."),
-        "04-dashboard.png": ("Track your climb", "Rank, momentum, and season progress"),
-        "05-friends.png": ("Climb with your crew", "Compare leaderboards with friends"),
-        "06-profile.png": ("Your season, at a glance", "Stats, tiers, and how you’re trending"),
-    },
-}
+# Per-app headline copy, colors and canvas size live in the gitignored
+# apps.local.json under each app's "overlay" key (see apps.example.json).
+from _apps import load_apps  # noqa: E402
 
-# Canvas colors + text (RGB)
-THEMES = {
-    "demoapp": {
-        "bg_top": (255, 228, 236),
-        "bg_bot": (245, 210, 222),
-        "headline": (88, 28, 52),
-        "sub": (130, 70, 95),
-        "accent": (190, 70, 110),
-        "frame": (255, 255, 255),
-    },
-    "sampleapp": {
-        "bg_top": (14, 20, 22),
-        "bg_bot": (28, 40, 38),
-        "headline": (210, 250, 235),
-        "sub": (160, 190, 180),
-        "accent": (90, 210, 170),
-        "frame": (30, 36, 38),
-    },
-    "exampleapp": {
-        "bg_top": (8, 12, 22),
-        "bg_bot": (18, 28, 48),
-        "headline": (235, 242, 255),
-        "sub": (150, 180, 220),
-        "accent": (70, 160, 255),
-        "frame": (20, 26, 40),
-    },
+DEFAULT_THEME = {
+    "bg_top": (14, 20, 30),
+    "bg_bot": (30, 40, 60),
+    "headline": (240, 244, 255),
+    "sub": (170, 185, 210),
+    "accent": (90, 150, 255),
+    "frame": (30, 36, 48),
 }
+DEFAULT_CANVAS = (1290, 2796)  # iPhone 6.7"; iPad 12.9" is (2064, 2752)
+
+
+def overlay_cfg(app: str) -> dict:
+    cfg = load_apps()[app].get("overlay") or {}
+    theme = {**DEFAULT_THEME, **{k: tuple(v) for k, v in (cfg.get("theme") or {}).items()}}
+    return {
+        "copy": {k: tuple(v) for k, v in (cfg.get("copy") or {}).items()},
+        "theme": theme,
+        "canvas": tuple(cfg.get("canvas") or DEFAULT_CANVAS),
+        "headline_scale": float(cfg.get("headline_scale", 0.078)),
+        "sub_scale": float(cfg.get("sub_scale", 0.038)),
+    }
 
 
 def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
@@ -90,7 +64,7 @@ def font(size: int, bold: bool = False) -> ImageFont.FreeTypeFont:
 
 
 def ensure_raw(app: str) -> Path:
-    shots = ROOT / "products" / app / "screenshots"
+    shots = load_apps()[app]["dir"] / "screenshots"
     raw = shots / "raw"
     raw.mkdir(parents=True, exist_ok=True)
     # Prefer restoring from raw if overlays already overwrote screenshots/
@@ -146,14 +120,11 @@ def rounded_device(shot: Image.Image, radius: int) -> Image.Image:
 
 
 def compose(app: str, name: str, src: Path, dest: Path) -> None:
-    theme = THEMES[app]
-    headline, subline = COPY[app][name]
+    oc = overlay_cfg(app)
+    theme = oc["theme"]
+    headline, subline = oc["copy"][name]
     shot = Image.open(src).convert("RGB")
-    # Target ASC sizes
-    if app == "demoapp":
-        canvas_size = (2064, 2752)
-    else:
-        canvas_size = (1290, 2796)
+    canvas_size = oc["canvas"]
 
     canvas = gradient(canvas_size, theme["bg_top"], theme["bg_bot"])
     draw = ImageDraw.Draw(canvas)
@@ -171,8 +142,8 @@ def compose(app: str, name: str, src: Path, dest: Path) -> None:
     )
     y += int(ch * 0.025)
 
-    h_size = int(cw * (0.062 if app == "demoapp" else 0.078))
-    s_size = int(cw * (0.030 if app == "demoapp" else 0.038))
+    h_size = int(cw * oc["headline_scale"])
+    s_size = int(cw * oc["sub_scale"])
     hf = font(h_size, bold=True)
     sf = font(s_size, bold=False)
 
@@ -227,9 +198,17 @@ def compose(app: str, name: str, src: Path, dest: Path) -> None:
 
 
 def main() -> None:
-    for app, files in COPY.items():
+    import sys
+
+    apps = load_apps()
+    keys = sys.argv[1:] or [k for k, v in apps.items() if v.get("overlay")]
+    for app in keys:
+        files = overlay_cfg(app)["copy"]
+        if not files:
+            print(f"  skip {app}: no overlay.copy configured")
+            continue
         raw = ensure_raw(app)
-        out_dir = ROOT / "products" / app / "screenshots"
+        out_dir = apps[app]["dir"] / "screenshots"
         for name in files:
             src = raw / name
             if not src.exists():

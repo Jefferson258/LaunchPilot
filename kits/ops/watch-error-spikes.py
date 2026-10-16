@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Detect error spikes in Example App/Sample App Supabase app_errors tables and alert.
+"""Detect error spikes in your products' Supabase app_errors tables and alert.
 
 Alerts (in order, each optional):
   1. Write markdown under LaunchPilot/jobs/alerts/
@@ -10,7 +10,7 @@ Alerts (in order, each optional):
 No auto-deploy. No secrets committed — uses `supabase` CLI login role.
 
 Usage:
-  python3 watch-error-spikes.py [--dry-run] [--window-min 15] [--product exampleapp|sampleapp|all]
+  python3 watch-error-spikes.py [--dry-run] [--window-min 15] [--product <key>|all]
 """
 
 from __future__ import annotations
@@ -29,28 +29,35 @@ LP_DIR = Path(__file__).resolve().parents[2]
 ALERTS_DIR = LP_DIR / "jobs" / "alerts"
 STATE_PATH = ALERTS_DIR / "spike-state.json"
 
-PRODUCTS = {
-    "exampleapp": {
-        "ref": "YOUR_SUPABASE_PROJECT_REF",
-        "repo": "exampleapp",
-        "table": "exampleapp_app_errors",
-        "gh_repo": "your-account/exampleapp",
-        "label": "Example App",
-        "pilot_product": "exampleapp-app",
-    },
-    "sampleapp": {
-        "ref": "YOUR_SUPABASE_PROJECT_REF",
-        "repo": "Sample App",
-        "table": "app_errors",
-        "gh_repo": "your-account/Sample App",
-        "label": "Sample App",
-        "pilot_product": "sampleapp-app",
-    },
-}
+# Per-product Supabase refs, tables and repos live in gitignored
+# kits/ops/products.local.json (template: products.example.json).
+# Override the path with PILOT_SPIKE_PRODUCTS_FILE.
+PRODUCTS_FILE = Path(
+    os.environ.get("PILOT_SPIKE_PRODUCTS_FILE") or Path(__file__).resolve().parent / "products.local.json"
+)
+
+
+def load_products() -> dict:
+    if not PRODUCTS_FILE.is_file():
+        sys.exit(
+            f"Missing {PRODUCTS_FILE}. Copy kits/ops/products.example.json to "
+            "kits/ops/products.local.json and fill in your products."
+        )
+    data = json.loads(PRODUCTS_FILE.read_text()).get("products") or {}
+    for key, cfg in data.items():
+        for field in ("ref", "repo", "table", "label", "pilot_product"):
+            if not cfg.get(field):
+                sys.exit(f"{PRODUCTS_FILE.name}: product '{key}' is missing '{field}'")
+        cfg.setdefault("gh_repo", "")
+    return data
+
+
+PRODUCTS: dict = {}
+
 
 def product_workdir(cfg: dict) -> Path:
     workspace = Path(
-        os.environ.get("PILOT_WORKSPACE", str(Path.home() / "Desktop"))
+        os.environ.get("PILOT_WORKSPACE", str(LP_DIR.parent))
     ).expanduser()
     return workspace / cfg["repo"]
 
@@ -232,6 +239,9 @@ def write_alert_md(product: str, label: str, rows: list[dict], window_min: int) 
 
 
 def create_github_issue(repo: str, title: str, body: str, dry_run: bool) -> str | None:
+    if not repo:
+        print("  (no gh_repo configured — skipping GitHub issue)")
+        return None
     if dry_run:
         print(f"[dry-run] would open GitHub issue on {repo}: {title}")
         return None
@@ -361,7 +371,7 @@ def check_product(product: str, window_min: int, dry_run: bool) -> int:
 
     print("\n--- Notion card (create via MCP / phone Shortcuts) ---")
     print(f"Task: {title}")
-    print("Status: To Do Next | Priority: P0 - Do first | Owner: Agent | App:", cfg["label"] if cfg["label"] in ("Example App", "Sample App") else "Business")
+    print("Status: To Do Next | Priority: P0 - Do first | Owner: Agent | App:", cfg["label"])
     print(f"Notes: alert file {path}" + (f" issue {issue_url}" if issue_url else ""))
 
     if not dry_run:
@@ -379,7 +389,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument("--window-min", type=int, default=15)
-    ap.add_argument("--product", choices=["exampleapp", "sampleapp", "all"], default="all")
+    global PRODUCTS
+    PRODUCTS = load_products()
+    ap.add_argument("--product", choices=[*PRODUCTS, "all"], default="all")
     args = ap.parse_args()
     if not 1 <= args.window_min <= 7 * 24 * 60:
         ap.error("--window-min must be between 1 and 10080 minutes")
@@ -396,7 +408,7 @@ def main() -> int:
                 key = key[7:].strip()
             os.environ.setdefault(key, v.strip().strip('"').strip("'"))
 
-    products = ["exampleapp", "sampleapp"] if args.product == "all" else [args.product]
+    products = list(PRODUCTS) if args.product == "all" else [args.product]
     rc = 0
     for p in products:
         rc |= check_product(p, args.window_min, args.dry_run)

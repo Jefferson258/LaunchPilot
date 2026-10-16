@@ -22,12 +22,14 @@ kits/analytics/
 
 ## Status per product
 
-| Product | Status | Files |
-|---|---|---|
-| Sample App | **Implemented** — facade, debug sink, unit tests in `Sample AppTests`, wired at app open / tab change / sign-in | `Sample App/Sample App/Services/Analytics/` |
-| Example App | **Implemented** — `AnalyticsService` facade, debug sink (ring buffer + `os.Logger`), verified via `xcodebuild build` + `Example AppUITests/Example AppAnalyticsLogicTests.swift` | `exampleapp/Services/Analytics/` |
-| DemoApp | Not started — see "Rollout: DemoApp" below | — |
-| Sample App-Website / exampleapp-website / DemoAppWebsite | Not started — `templates/web/beacon.js` is ready and tested, not yet dropped into a site | — |
+Track rollout per product in your own notes or in the `analytics_*` fields of
+`config/products.json` (gitignored). Typical states:
+
+| State | Meaning |
+|---|---|
+| Not started | Nothing copied yet |
+| Debug sink | Facade + debug sink wired; events visible locally, no network |
+| Provider | A network provider (TelemetryDeck, Supabase table, …) is live |
 
 ## Verify the core logic (do this first — fast, no Xcode)
 
@@ -37,7 +39,7 @@ swift test                                    # 13 tests, ~1s
 node --test templates/web/beacon.test.mjs     # 6 tests, ~0.1s
 ```
 
-## Rollout to a new iOS app (the pattern used for Sample App/Example App)
+## Rollout to a new iOS app
 
 1. Copy these files, unmodified, from `Sources/AnalyticsCore/` into the app's
    `Services/Analytics/` folder: `AnalyticsEvent.swift`, `AnalyticsNaming.swift`,
@@ -45,7 +47,7 @@ node --test templates/web/beacon.test.mjs     # 6 tests, ~0.1s
    `AnalyticsClient.swift`.
 2. Copy `templates/ios/AnalyticsConfig.swift.template` →
    `Services/Analytics/AnalyticsConfig.swift`, replacing `{{App}}`/`{{APP}}`
-   with the product name (e.g. `Sample App`/`SAMPLEAPP`).
+   with the product name (e.g. `ExampleApp`/`EXAMPLEAPP`).
 3. Copy `templates/ios/AnalyticsFacade.swift.template` →
    `Services/Analytics/<Product>Analytics.swift`, same replacement. Add/adjust
    the convenience methods for that app's actual screens.
@@ -73,18 +75,17 @@ app's container (Xcode → Window → Devices and Simulators → select app →
 Download Container), or check Xcode's console for `[Analytics][debug] ...`
 lines (DEBUG builds only), or (if you added the overlay) read the
 `analytics-debug-count` / `analytics-debug-last-event` accessibility elements
-from a UITest — see `Sample AppTests/AnalyticsClientTests.swift` and
-`Example AppUITests/Example AppUITests.swift` for real examples.
+from a UITest — see `Tests/AnalyticsCoreTests/` for the core assertions.
 
-## Rollout: DemoApp (client-side only, no Supabase)
+## Rollout: an on-device app (no backend)
 
-DemoApp is on-device SwiftData with no backend — this is actually the
+An app with on-device storage only (e.g. SwiftData) and no backend — this is actually the
 *simplest* case: follow the iOS steps above, but permanently keep
 `provider = "debug"` (or eventually TelemetryDeck) since there's no
 first-party server to add a Supabase-table option for. No changes needed
 to this kit; it was designed for exactly this "no backend" case first.
 
-## Rollout: a marketing site (Sample App-Website / exampleapp-website / DemoAppWebsite)
+## Rollout: a marketing site
 
 1. Copy `templates/web/beacon.js` into the site's `public/` folder.
 2. Add `<script type="module" src="/beacon.js"></script>` to the HTML
@@ -102,7 +103,7 @@ to this kit; it was designed for exactly this "no backend" case first.
    pattern as `kits/analytics/Sources` events). Neither is implemented yet —
    deliberately, to avoid overbuilding before there's a live site + traffic.
 
-## Rollout: first-party Supabase event table (Example App/Sample App, optional, not yet added)
+## Rollout: first-party Supabase event table (optional)
 
 Only do this if the owner wants raw event rows to query with SQL in addition
 to (or instead of) the debug sink. Sketch (additive, RLS-safe, **not applied**
@@ -126,5 +127,4 @@ create policy if not exists "insert own analytics events"
 ```
 
 Then add an `AnalyticsProvider` conformance in the app that inserts into this
-table (same shape as `PostReportAnalytics.swift` / `RepDetectionAnalytics.swift`
-in Sample App — fire-and-forget, swallow errors, never block UI).
+table (fire-and-forget, swallow errors, never block UI).

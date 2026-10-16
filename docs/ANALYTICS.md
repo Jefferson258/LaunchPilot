@@ -1,7 +1,6 @@
 # Analytics — architecture & decisions
 
-Status: **implemented and testable today** for Sample App and Example App (debug sink,
-no network). A real network provider (TelemetryDeck) is designed-for but
+Status: **implemented and testable today** via the debug sink (no network). A real network provider (TelemetryDeck) is designed-for but
 **owner-blocked** — see "What's owner-blocked" below. Nothing here spends
 money or sends data anywhere by default.
 
@@ -12,14 +11,14 @@ money or sends data anywhere by default.
 | **LaunchPilot** (`kits/analytics/`) | Shared conventions, privacy checklist, event-naming rules, the tested reference implementation (`AnalyticsCore` Swift package), `products.json` registry fields, web beacon template | These are cross-product policy + a proven implementation to copy from — not product code, and not secrets. |
 | **Each product repo** | SDK wiring (which provider, if any), the actual `<Product>Analytics` facade instance, concrete event call sites, provider API keys/app IDs (non-secret but product-specific), privacy-policy copy, consent UX | Every app has different screens, its own Supabase project (or none), and its own App Store privacy nutrition label. This can't be generalized without becoming vague. |
 
-**Why copy the Swift source instead of a cross-repo SPM dependency:** Sample App,
-Example App, and Demo App all use classic (non-package) Xcode project files — adding a
+**Why copy the Swift source instead of a cross-repo SPM dependency:** many
+indie apps use classic (non-package) Xcode project files — adding a
 local Swift package *dependency* to an existing `.xcodeproj` means hand-editing
 `packageReferences` / `XCSwiftPackageProductDependency` entries in
 `project.pbxproj`, which is fiddly and easy to corrupt. Adding a plain `.swift`
 **file** to an existing group/target is a well-worn, low-risk 4-line edit (file
-reference + build-file + group entry + sources-phase entry) that this codebase
-already does by hand for other services. So: the logic is written **once**,
+reference + build-file + group entry + sources-phase entry) that is easy to
+do by hand. So: the logic is written **once**,
 tested with `swift test` in `kits/analytics/`, and then the same ~5 small files
 are copied into each app's `Services/Analytics/` and adapted with the product
 name. If a product later adopts SPM-based project generation (e.g. Tuist,
@@ -35,7 +34,7 @@ line-for-line portable.
 | **Apple App Analytics** (App Store Connect) | Free, built-in | Apple-run, aggregated, opt-in-by-user at OS level | Zero code | Already available for every app with no work. Complements custom events; doesn't replace them (no custom event names, no funnel breakdowns). Turn it on in App Store Connect ("App Analytics" tab) if not already. |
 | **TelemetryDeck** | Free tier: 1 app, ~100k signals/mo (check current limits before relying on them) | Privacy-first by design; anonymous, no IP storage, no cross-app tracking, App Store "Data Not Collected" friendly | Create account + app ID (owner), add SPM package in Xcode (owner or agent with Xcode GUI access), no backend to run | **Recommended next step** once the owner wants real dashboards. Best fit for "indie iOS, no server, privacy-safe, App Store nutrition label stays clean." |
 | **PostHog** | Free cloud tier exists but has monthly event caps and the SDK/dependency footprint is heavier (session replay, feature flags, etc. bundled in); self-hosting free but is real infra to run/maintain | Good if self-hosted; cloud free tier still is a third-party processor | Higher (account + SDK + possibly infra) | Documented as an alternative, not implemented — more than these apps need right now. Revisit if the owner wants product analytics beyond events (funnels, replay) and is fine maintaining infra or accepting cloud limits. |
-| **First-party Supabase event table** | Free (same project, same tier already in use) | Best possible — data never leaves the owner's own Supabase project | Low (one additive migration + insert calls) | Good complementary option for Example App/Sample App specifically *if* the owner wants raw event rows to query with SQL. Not implemented yet (see "Rollout" doc) to avoid overbuilding; the debug sink already proves the client-side pattern, and adding the table is a 20-minute follow-up whenever wanted. |
+| **First-party Supabase event table** | Free (same project, same tier already in use) | Best possible — data never leaves the owner's own Supabase project | Low (one additive migration + insert calls) | Good complementary option for Supabase-backed apps *if* the owner wants raw event rows to query with SQL. Not implemented yet (see "Rollout" doc) to avoid overbuilding; the debug sink already proves the client-side pattern, and adding the table is a 20-minute follow-up whenever wanted. |
 
 **Decision:** ship the **debug sink as the permanent default provider** (it's
 useful in every environment — TestFlight crash/support triage, QA, local dev)
@@ -97,7 +96,7 @@ Documentary-only fields (no secrets) added to every product entry in
 |---|---|
 | `analytics_provider` | `"debug"` \| `"telemetrydeck"` \| `"none"`. What's actually wired today. Currently `"debug"` for iOS apps, `"none"`/undecided for sites. |
 | `analytics_debug` | `true` when the debug sink is the active provider (or always-on alongside a network provider). Lets agents/QA know events are inspectable locally with no account. |
-| `analytics_app_id_env` | The **name** of the env var / xcconfig key holding a provider app ID (e.g. `SAMPLEAPP_ANALYTICS_APP_ID`) — never the value. Empty string when no provider needs one (debug sink doesn't). |
+| `analytics_app_id_env` | The **name** of the env var / xcconfig key holding a provider app ID (e.g. `EXAMPLEAPP_ANALYTICS_APP_ID`) — never the value. Empty string when no provider needs one (debug sink doesn't). |
 | `analytics_enabled` | Documentary mirror of the in-app master kill switch default. |
 | `analytics_debug_file` | Relative path convention for where the on-device JSONL debug log lands (e.g. `Documents/analytics-debug-events.jsonl`), so QA knows where to look via Xcode's device file browser / simulator container. |
 
@@ -120,8 +119,7 @@ per-product rollout.
 - **Turning on/confirming Apple App Analytics** in App Store Connect per app
   — zero cost, just needs the owner (or an agent with ASC access) to check
   it's enabled.
-- **Website analytics** — no site repo was wired in this pass (Sample App-Website,
-  exampleapp-website, DemoAppWebsite); a first-party beacon template exists
+- **Website analytics** — a first-party beacon template exists
   and is verified with `node --test`, but dropping it into a live site and
   deciding self-host vs. Vercel Analytics vs. nothing is an owner call — see
   `kits/analytics/README.md` "Rollout" section.

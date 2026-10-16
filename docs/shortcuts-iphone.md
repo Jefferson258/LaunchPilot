@@ -41,8 +41,8 @@ cd "$LP"
 Replace `demo-site` / prompt when driving a real product. Add ship flags only deliberately:
 
 ```bash
-./bin/pilot remote-run demoapp-app "Fix empty state" --sleep
-# ./bin/pilot remote-run exampleapp-app "…" --ship-testflight --sleep
+./bin/pilot remote-run my-app "Fix empty state" --sleep
+# ./bin/pilot remote-run my-app "…" --ship-testflight --sleep
 ```
 
 ---

@@ -61,8 +61,8 @@ if [[ -z "${P_TF_KEY:-}" ]]; then
   err "$P_NAME has no tf_key in products.json (needed to map to ASC app)"
   exit 1
 fi
-if [[ ! -f "$TF_KIT/config.sh" ]]; then
-  err "kits/testflight/config.sh missing — see docs/SETUP.md"
+if [[ ! -f "$TF_KIT/config.local.sh" && ! -f "$TF_KIT/config.sh" ]]; then
+  err "kits/testflight/config.local.sh (or config.sh) missing — copy config.example.sh (docs/SETUP.md)"
   exit 1
 fi
 

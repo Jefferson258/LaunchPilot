@@ -21,7 +21,7 @@
 set -euo pipefail
 
 APP_PATH="${APP_PATH:?Set APP_PATH to the built .app (e.g. find DerivedData .../Debug-iphonesimulator/*.app)}"
-BUNDLE_ID="${BUNDLE_ID:?Set BUNDLE_ID to the app's bundle identifier}"
+BUNDLE_ID="${BUNDLE_ID:?Set BUNDLE_ID to the app bundle identifier}"
 LAUNCH_ARGS=(${LAUNCH_ARGS:-"-skipTutorial" "-acceptLegalTerms" "-seedDemoData"})
 DEVICE="${1:-booted}"
 
@@ -39,7 +39,7 @@ JSONL="$CONTAINER/Documents/analytics-debug-events.jsonl"
 
 if [[ ! -f "$JSONL" ]]; then
   echo "FAIL: no debug JSONL file found at $JSONL" >&2
-  echo "(check that EXAMPLEAPP_ANALYTICS_PROVIDER / equivalent isn't set to 'none' and analytics_enabled != 0)" >&2
+  echo "(check that <APP>_ANALYTICS_PROVIDER / equivalent isn't set to 'none' and analytics_enabled != 0)" >&2
   exit 1
 fi
 

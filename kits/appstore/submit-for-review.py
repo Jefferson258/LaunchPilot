@@ -18,9 +18,9 @@ Flow (Apple's current API):
   4. PATCH /v1/reviewSubmissions/{id}  submitted=true
 
 Usage (from LaunchPilot root):
-  python3 kits/appstore/submit-for-review.py exampleapp --dry-run
-  python3 kits/appstore/submit-for-review.py exampleapp --dry-run --phased
-  python3 kits/appstore/submit-for-review.py exampleapp --execute --phased
+  python3 kits/appstore/submit-for-review.py example --dry-run
+  python3 kits/appstore/submit-for-review.py example --dry-run --phased
+  python3 kits/appstore/submit-for-review.py example --execute --phased
 """
 
 from __future__ import annotations
@@ -41,14 +41,13 @@ except ImportError:
     sys.exit("PyJWT required: pip3 install pyjwt cryptography")
 
 ROOT = Path(__file__).resolve().parent
-KIT_DIR = ROOT.parent / "testflight"
 API = "https://api.appstoreconnect.apple.com"
 
-APPS = {
-    "demoapp": {"asc_app_id": "0000000000", "platform": "IOS"},
-    "sampleapp": {"asc_app_id": "0000000000", "platform": "IOS"},
-    "exampleapp": {"asc_app_id": "0000000000", "platform": "IOS"},
-}
+# Per-app ASC ids live in gitignored apps.local.json (or the TestFlight
+# app registry) — see _apps.py.
+from _apps import load_apps, load_asc_config, require_asc_app_id  # noqa: E402
+
+APPS = load_apps()
 
 SUBMITTABLE = {
     "PREPARE_FOR_SUBMISSION",
@@ -63,26 +62,6 @@ PHASED_OK_STATES = {"INACTIVE", "ACTIVE"}
 
 class PhasedReleaseError(RuntimeError):
     """Raised when Apple rejects phased release (e.g. first public version)."""
-
-
-def load_asc_config() -> tuple[str, str, str]:
-    config = KIT_DIR / "config.sh"
-    if not config.is_file():
-        sys.exit(f"Missing {config}")
-    out = subprocess.check_output(
-        [
-            "bash",
-            "-lc",
-            f"source '{config}' && printf '%s\\n' \"$ASC_KEY_ID\" \"$ASC_ISSUER_ID\" \"$ASC_KEY_PATH\"",
-        ],
-        text=True,
-    ).strip().splitlines()
-    if len(out) != 3:
-        sys.exit("Could not read ASC config from kits/testflight/config.sh")
-    key_id, issuer_id, key_path = out
-    if not Path(key_path).is_file():
-        sys.exit(f"ASC key not found: {key_path}")
-    return key_id, issuer_id, key_path
 
 
 class ASCClient:
@@ -304,7 +283,7 @@ def apply_phased_release(
 
 def plan(app_key: str, client: ASCClient, want_phased: bool) -> dict[str, Any]:
     meta = APPS[app_key]
-    app_id = meta["asc_app_id"]
+    app_id = require_asc_app_id(app_key, meta)
     version = get_editable_version(client, app_id)
     attrs = version.get("attributes", {})
     open_sub = find_open_submission(client, app_id)
@@ -401,7 +380,7 @@ def main() -> int:
     parser.add_argument(
         "app",
         choices=sorted(APPS),
-        help="App key (demoapp|sampleapp|exampleapp)",
+        help="App key from kits/appstore/apps.local.json (matches tf_key)",
     )
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument(

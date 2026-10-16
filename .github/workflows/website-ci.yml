@@ -1,5 +1,5 @@
-# This workflow intentionally checks only the bundled demo site. The three
-# real websites are private sibling repositories, so a GITHUB_TOKEN scoped to
+# This workflow intentionally checks only the bundled demo site. Real product
+# websites live in their own (often private) sibling repositories, so a GITHUB_TOKEN scoped to
 # LaunchPilot cannot check them out. See docs/WEBSITE_CI.md for safe local and
 # per-repository guidance; do not add a PAT or other checkout secret here.
 name: Website build, typecheck, and QA

@@ -6,10 +6,10 @@ Every TestFlight / production web ship should leave a **GitHub Release** (and `C
 
 ```bash
 # Preview notes for a repo
-./kits/release-notes/generate.sh --repo ~/Desktop/exampleapp | less
+./kits/release-notes/generate.sh --repo "$PILOT_WORKSPACE/ExampleApp" | less
 
 # Publish tag + GitHub Release + prepend CHANGELOG.md (commit that file only)
-./kits/release-notes/publish.sh --repo ~/Desktop/exampleapp --tag exampleapp-ios-1.0.0+8 --title "Example App iOS 1.0.0 (8)" --commit
+./kits/release-notes/publish.sh --repo "$PILOT_WORKSPACE/ExampleApp" --tag example-ios-1.0.0+8 --title "Example App iOS 1.0.0 (8)" --commit
 ```
 
 LaunchPilot wires this automatically:
@@ -27,7 +27,5 @@ LaunchPilot wires this automatically:
 
 | Product | Tag example |
 |---------|-------------|
-| Example App iOS | `exampleapp-ios-1.0.0+7` |
-| Sample App iOS | `sampleapp-ios-1.0.0+39` |
-| DemoApp iOS | `demoapp-ios-1.0.0+12` |
-| Sites | `exampleapp-site-web-20260721-a1b2c3d` |
+| iOS app | `example-ios-1.0.0+7` |
+| Sites | `my-site-web-20260721-a1b2c3d` |

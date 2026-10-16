@@ -44,6 +44,6 @@
     "analytics_app_id_env": "",
     "analytics_enabled": false,
     "analytics_debug_file": "",
-    "notes": "Point qa:screenshots at LaunchPilot kits/qa/web-capture.mjs (see exampleapp-website/scripts/capture-qa-screenshots.mjs). Analytics: drop in kits/analytics/templates/web/beacon.js when ready — see kits/analytics/README.md."
+    "notes": "Point qa:screenshots at LaunchPilot kits/qa/web-capture.mjs (see docs/VISUAL_QA.md). Analytics: drop in kits/analytics/templates/web/beacon.js when ready — see kits/analytics/README.md."
   }
 }

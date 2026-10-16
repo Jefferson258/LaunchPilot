@@ -16,12 +16,12 @@ if [[ "${2:-}" != "--confirm" ]]; then
   err "  ./bin/pilot testflight $1 --confirm"
   exit 1
 fi
-if [[ ! -f "$TF_KIT/config.sh" ]]; then
-  err "kits/testflight/config.sh missing — see docs/SETUP.md"
+if [[ ! -f "$TF_KIT/config.local.sh" && ! -f "$TF_KIT/config.sh" ]]; then
+  err "kits/testflight/config.local.sh (or config.sh) missing — copy config.example.sh (docs/SETUP.md)"
   exit 1
 fi
-if [[ ! -f "$TF_KIT/apps.sh" ]]; then
-  err "kits/testflight/apps.sh missing — copy from apps.example.sh (docs/SETUP.md)"
+if [[ ! -f "$TF_KIT/apps.local.sh" && ! -f "$TF_KIT/apps.sh" ]]; then
+  err "kits/testflight/apps.local.sh (or apps.sh) missing — copy apps.example.sh (docs/SETUP.md)"
   exit 1
 fi
 

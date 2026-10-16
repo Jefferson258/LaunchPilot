@@ -1,5 +1,6 @@
 blank_issues_enabled: true
-contact_links:
-  - name: Launch Command Center (Notion)
-    url: https://app.example.com/launch-board
-    about: Owner/agent launch board. Do not put secrets, tokens, or customer data here.
+# Optional: link your own launch board or docs here, for example:
+# contact_links:
+#   - name: Launch board
+#     url: https://app.example.com/launch-board
+#     about: Owner/agent launch board. Do not put secrets, tokens, or customer data here.

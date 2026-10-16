@@ -4,7 +4,7 @@
 # TestFlight uploads work WITHOUT Xcode cloud-managed signing.
 #
 # Why this exists:
-#   This Apple account's API key has the "App Manager" role. Apple FORBIDS
+#   If your API key has the "App Manager" role, Apple FORBIDS
 #   App Manager keys from using *cloud-managed* distribution certificates
 #   ("You haven't been given access to cloud-managed distribution
 #   certificates"). But App Manager CAN create a regular distribution
@@ -15,7 +15,10 @@
 #
 # Then archive-and-upload.sh uses signingStyle=manual with these assets.
 #
-# Requirements: config.sh filled in; python3 with pyjwt + cryptography
+# Profiles are created for every app in the registry (apps.local.sh /
+# apps.sh): BUNDLE_ID → PROFILE_NAME, plus WATCH_BUNDLE_ID → WATCH_PROFILE_NAME.
+#
+# Requirements: config.local.sh (or config.sh) filled in; python3 with pyjwt + cryptography
 #   pip3 install pyjwt cryptography
 
 set -euo pipefail
@@ -37,7 +40,14 @@ openssl req -new -key "$PRIVKEY" -out "$CSR" \
   -subj "/CN=Distribution/O=Developer/C=US" 2>/dev/null
 
 log "Creating Apple Distribution certificate via App Store Connect API…"
-PROFILE_NAMES="DemoApp AppStore:com.example.demoapp Example App AppStore:com.example.app Sample App AppStore:com.example.sampleapp"
+# One "profile name|bundle id" pair per line, built from the app registry.
+PROFILE_NAMES=""
+for key in $(tf_app_keys); do
+  resolve_app "$key"
+  [[ -n "${BUNDLE_ID:-}" && -n "${PROFILE_NAME:-}" ]] && PROFILE_NAMES+="${PROFILE_NAME}|${BUNDLE_ID}"$'\n'
+  [[ -n "${WATCH_BUNDLE_ID:-}" && -n "${WATCH_PROFILE_NAME:-}" ]] && PROFILE_NAMES+="${WATCH_PROFILE_NAME}|${WATCH_BUNDLE_ID}"$'\n'
+done
+[[ -n "$PROFILE_NAMES" ]] || { err "No BUNDLE_ID/PROFILE_NAME pairs in the apps registry"; exit 1; }
 python3 - "$ASC_KEY_ID" "$ASC_ISSUER_ID" "$ASC_KEY_PATH" "$CSR" "$CERT_DER" "$TEAM_ID" "$PROFILE_NAMES" <<'PY'
 import sys, time, json, http.client, base64, os
 import jwt
@@ -75,9 +85,10 @@ st,b=api("GET","/v1/bundleIds?limit=200")
 bundles={x["attributes"]["identifier"]:x["id"] for x in json.loads(b)["data"]}
 profdir=os.path.expanduser("~/Library/MobileDevice/Provisioning Profiles")
 os.makedirs(profdir,exist_ok=True)
-for pair in profmap.split():
-    name,ident = pair.split(":")
-    name=name.replace("_"," ")
+for pair in profmap.splitlines():
+    if not pair.strip():
+        continue
+    name,ident = pair.split("|",1)
     bid=bundles.get(ident)
     if not bid:
         print("  ! missing bundleId in portal:",ident); continue
@@ -107,4 +118,4 @@ security import "$P12" -k "$HOME/Library/Keychains/login.keychain-db" \
 log "Signing assets ready. Identities:"
 security find-identity -v -p codesigning | grep -i distribution || true
 echo
-echo "Now run: ./archive-and-upload.sh <demoapp|exampleapp|sampleapp>"
+echo "Now run: ./archive-and-upload.sh <app-key>"

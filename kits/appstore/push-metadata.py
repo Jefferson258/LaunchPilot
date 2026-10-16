@@ -21,51 +21,13 @@ except ImportError:
     sys.exit("PyJWT required: pip3 install pyjwt cryptography")
 
 ROOT = Path(__file__).resolve().parent  # kits/appstore
-KIT_DIR = ROOT.parent / "testflight"  # kits/testflight (ASC JWT via config.sh)
 API = "https://api.appstoreconnect.apple.com"
 
-# Product listing assets live under kits/appstore/products/<key>/ (screenshots gitignored).
-# Copy products.example layout or your own folders; see docs/SETUP.md.
-APPS = {
-    "demoapp": {
-        "asc_app_id": "0000000000",
-        "dir": ROOT / "products" / "demoapp",
-        "screenshot_type": "APP_IPAD_PRO_3GEN_129",
-        "primary_category": "LIFESTYLE",
-        "secondary_category": "PHOTO_AND_VIDEO",
-    },
-    "sampleapp": {
-        "asc_app_id": "0000000000",
-        "dir": ROOT / "products" / "sampleapp",
-        "screenshot_type": "APP_IPHONE_67",
-        "primary_category": "HEALTH_AND_FITNESS",
-        "secondary_category": "SOCIAL_NETWORKING",
-    },
-    "exampleapp": {
-        "asc_app_id": "0000000000",
-        "dir": ROOT / "products" / "exampleapp",
-        "screenshot_type": "APP_IPHONE_67",
-        "primary_category": "SPORTS",
-        "secondary_category": "ENTERTAINMENT",
-    },
-}
+# Per-app config (ASC app id, screenshot type, categories, review contact)
+# lives in gitignored apps.local.json — see _apps.py / apps.example.json.
+from _apps import load_apps, load_asc_config, load_raw, require_asc_app_id  # noqa: E402
 
-
-def load_asc_config() -> tuple[str, str, str]:
-    config = KIT_DIR / "config.sh"
-    if not config.is_file():
-        sys.exit(f"Missing {config}")
-    env = os.environ.copy()
-    out = subprocess.check_output(
-        ["bash", "-lc", f"source '{config}' && printf '%s\\n' \"$ASC_KEY_ID\" \"$ASC_ISSUER_ID\" \"$ASC_KEY_PATH\""],
-        text=True,
-    ).strip().splitlines()
-    if len(out) != 3:
-        sys.exit("Could not read ASC config from kits/testflight/config.sh")
-    key_id, issuer_id, key_path = out
-    if not Path(key_path).is_file():
-        sys.exit(f"ASC key not found: {key_path}")
-    return key_id, issuer_id, key_path
+APPS = load_apps()
 
 
 class ASCClient:
@@ -223,7 +185,22 @@ def get_app_info_localization(client: ASCClient, app_id: str, locale: str = "en-
     return app_info, loc
 
 
-def ensure_review_detail(client: ASCClient, version_id: str) -> dict | None:
+def review_contact(cfg: dict) -> dict:
+    """App Review contact from config (per app, or top-level "review_contact")."""
+    contact = cfg.get("review_contact") or load_raw().get("review_contact") or {}
+    attrs = {}
+    for src, dst in (
+        ("first_name", "contactFirstName"),
+        ("last_name", "contactLastName"),
+        ("phone", "contactPhone"),
+        ("email", "contactEmail"),
+    ):
+        if contact.get(src):
+            attrs[dst] = contact[src]
+    return attrs
+
+
+def ensure_review_detail(client: ASCClient, version_id: str, contact: dict) -> dict | None:
     try:
         data = client.request("GET", f"/v1/appStoreVersions/{version_id}/appStoreReviewDetail")
     except RuntimeError as e:
@@ -233,6 +210,9 @@ def ensure_review_detail(client: ASCClient, version_id: str) -> dict | None:
     detail = data.get("data")
     if detail:
         return detail
+    if not contact:
+        print("  (no review_contact configured — skipping App Review detail creation)")
+        return None
     try:
         created = client.request(
             "POST",
@@ -240,11 +220,7 @@ def ensure_review_detail(client: ASCClient, version_id: str) -> dict | None:
             {
                 "data": {
                     "type": "appStoreReviewDetails",
-                    "attributes": {
-                        "contactFirstName": "Your",
-                        "contactLastName": "Name",
-                        "contactPhone": "+15555550100",
-                    },
+                    "attributes": contact,
                     "relationships": {
                         "appStoreVersion": {
                             "data": {"type": "appStoreVersions", "id": version_id}
@@ -383,7 +359,7 @@ def push_app(
 ) -> None:
     cfg = APPS[app_key]
     meta = parse_metadata(cfg["dir"] / "metadata.md")
-    app_id = cfg["asc_app_id"]
+    app_id = require_asc_app_id(app_key, cfg)
     print(f"\n==> {app_key} (ASC {app_id})")
 
     version = get_editable_version(client, app_id)
@@ -445,7 +421,7 @@ def push_app(
         )
 
     if meta.get("review_notes"):
-        detail = ensure_review_detail(client, version_id)
+        detail = ensure_review_detail(client, version_id, review_contact(cfg))
         if detail:
             client.request(
                 "PATCH",

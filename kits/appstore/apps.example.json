@@ -1,0 +1,36 @@
+{
+  "_comment": "Copy to apps.local.json (gitignored) and fill in. Keys must match tf_key in config/products.json. asc_app_id may be omitted if ASC_APP_ID is set in kits/testflight/apps.local.sh.",
+  "review_contact": {
+    "first_name": "Your",
+    "last_name": "Name",
+    "phone": "+15555550100",
+    "email": "support@example.com"
+  },
+  "apps": {
+    "example": {
+      "asc_app_id": "0000000000",
+      "platform": "IOS",
+      "dir": "products/example",
+      "screenshot_type": "APP_IPHONE_67",
+      "primary_category": "PRODUCTIVITY",
+      "secondary_category": "UTILITIES",
+      "overlay": {
+        "canvas": [1290, 2796],
+        "headline_scale": 0.078,
+        "sub_scale": 0.038,
+        "theme": {
+          "bg_top": [14, 20, 30],
+          "bg_bot": [30, 40, 60],
+          "headline": [240, 244, 255],
+          "sub": [170, 185, 210],
+          "accent": [90, 150, 255],
+          "frame": [30, 36, 48]
+        },
+        "copy": {
+          "01-home.png": ["Your headline here", "One short supporting line"],
+          "02-main.png": ["Second screen headline", "What this screen helps with"]
+        }
+      }
+    }
+  }
+}

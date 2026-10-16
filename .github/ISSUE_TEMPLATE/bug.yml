@@ -14,12 +14,7 @@ body:
       options:
         - Example App (iOS)
         - Example App (website)
-        - Sample App (iOS)
-        - Sample App (website)
-        - Demo App (iPad)
-        - Demo App (website)
         - LaunchPilot
-        - MarketingPilot
         - Other
     validations:
       required: true
@@ -28,7 +23,7 @@ body:
     attributes:
       label: Build / URL
       description: TestFlight build number, git SHA, or the site URL where you saw this.
-      placeholder: "Example App TF 10 / sampleapp.app / SHA abc1234"
+      placeholder: "TF build 10 / app.example.com / SHA abc1234"
     validations:
       required: true
   - type: input

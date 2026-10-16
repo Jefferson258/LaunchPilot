@@ -1,5 +1,5 @@
 // Template: copy to <Product>/Services/Analytics/AnalyticsConfig.swift and
-// replace every `{{APP}}` with the product's env-var prefix (e.g. SAMPLEAPP, EXAMPLEAPP).
+// replace every `{{APP}}` with the product's env-var prefix (e.g. EXAMPLEAPP, MYAPP).
 //
 // Same env-first, then-Info.plist, then-default pattern already used by
 // SupabaseConfig in this codebase, so it's consistent and testable the same way.

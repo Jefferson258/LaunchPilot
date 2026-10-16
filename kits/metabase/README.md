@@ -1,47 +1,54 @@
-# Metabase (local) for Example App + Sample App
+# Metabase (local) + lite dashboard
 
-Free, self-hosted dashboards against Supabase Postgres.
+Free, self-hosted dashboards against your products' Supabase Postgres, using
+read-only roles. Works with the event/error tables written by `kits/analytics`
+(`event_name`, `created_at` / `severity`, `message`, `screen`, `created_at`).
 
-## Use this now (lite — works on 8GB Mac)
+## Configure (local, gitignored)
 
 ```bash
-cd ~/Desktop/LaunchPilot/kits/metabase
+cd kits/metabase
+cp dashboards.example.json dashboards.local.json           # products + table names
+cp supabase-connections.env.example supabase-connections.env  # read-only creds
+```
+
+See [supabase-connections.README.md](supabase-connections.README.md) for the
+connection settings.
+
+## Lite dashboard (light on RAM)
+
+```bash
 python3 lite_dashboard.py
 # http://127.0.0.1:3050
 ```
 
-Charts for Example App/Sample App events, errors, and product views via read-only `metabase_ro` roles.
-
-## Full Metabase (heavier — 8 GB RAM; use a 512 MB heap)
-
-The original failure was **RAM**, not disk. KeepAlive is not loaded.
+## Full Metabase (heavier; cap the heap on small machines)
 
 ```bash
+# put metabase.jar in this folder first (gitignored)
 JAVA_TOOL_OPTIONS='-Xmx512m -Xms128m' ./start.sh
-# then open http://localhost:3000 on the other monitor:
-~/Desktop/scripts/open-on-other-monitor.sh "Safari"
 open http://localhost:3000
 ```
 
-Login: see `METABASE_ADMIN_*` in gitignored `supabase-connections.env`.
+Admin login: `METABASE_ADMIN_*` in `supabase-connections.env`. Add each
+product's Postgres in the Metabase UI, then put the Metabase database id in
+`dashboards.local.json` (`metabase_db_id`).
 
-Health dashboards (one screen per app):
+Health dashboards (one screen per product, idempotent refresh):
 
 ```bash
-python3 create_health_dashboards.py   # idempotent refresh
-open http://localhost:3000/dashboard/2   # Example App health
-open http://localhost:3000/dashboard/3   # Sample App health
+python3 create_health_dashboards.py
 ```
 
-**Errors last 24 hours** should stay at 0. Charts stay flat until TestFlight traffic lands. DemoApp has no backend analytics — use App Store Connect.
+**Errors last 24 hours** should stay at 0. Charts stay flat until real traffic lands.
 
-## Connect databases (Metabase UI)
+Optional launchd KeepAlive: copy `com.launchpilot.metabase.plist.example`, replace
+`/path/to/LaunchPilot`, and load it only if the machine has RAM to spare.
 
-Use Session pooler settings from `supabase-connections.README.md` (passwords in local `supabase-connections.env`, never git). SSL required.
+## Customizing
 
-Suggested questions / dashboards:
-- Example App: `v_exampleapp_analytics_daily`, `v_exampleapp_app_errors_daily`, `v_exampleapp_slip_events_daily`, `v_exampleapp_product_counts`
-- Sample App: `v_analytics_daily`, `v_app_errors_daily`, `v_social_stats` (if present)
+Product-specific cards (custom views, business metrics) are best kept in a
+private `*.local.py` copy of these scripts — `*.local.*` is gitignored.
 
 ## Stop
 
@@ -49,5 +56,3 @@ Suggested questions / dashboards:
 ./stop.sh
 pkill -f lite_dashboard.py
 ```
-
-See `STATUS.md` for what was verified Jul 23.

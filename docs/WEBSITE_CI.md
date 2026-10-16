@@ -7,24 +7,22 @@ only `examples/demo-site`. It uses `contents: read`, installs dependencies
 with `npm ci`, builds, optionally typechecks, installs the Playwright Chromium
 browser, and runs visual QA. It has no secrets, uploads, or deployment steps.
 
-## Why it cannot check the three real sites from this repository
+## Why it does not check your real sites from this repository
 
-The real sites are private sibling repositories:
+Your product sites usually live in their own (often private) sibling
+repositories, for example `ExampleSite/` registered as `my-site` in
+`config/products.json`.
 
-- `Sample App-Website` (`sampleapp-site`)
-- `exampleapp-website` (`exampleapp-site`)
-- `DemoAppWebsite` (`demoapp-site`)
-
-The workflow runs in the private LaunchPilot repository. Its default
+The workflow runs in the LaunchPilot repository. Its default
 `GITHUB_TOKEN` is scoped to LaunchPilot and cannot check out those other
 private repositories. Checking them out would require a PAT, GitHub App
 credential, or another cross-repository secret, which is outside the
 secret-free CI policy and should not be added to this workflow.
 
 Also, a push or pull request in a sibling repository does not trigger a
-workflow defined in LaunchPilot. The sites' current screenshot scripts resolve
+workflow defined in LaunchPilot. Site screenshot scripts that resolve
 the shared QA helper from a neighboring local `LaunchPilot` checkout, which is
-available on this Mac but is not present in a clean product-repository runner.
+available on your machine but is not present in a clean product-repository runner.
 
 Therefore, this workflow is intentionally not expanded with external checkout
 jobs, scheduled polling, `repository_dispatch`, or production deployment
@@ -36,14 +34,8 @@ From the LaunchPilot checkout, run the existing registry-driven checks against
 the local sibling repositories:
 
 ```bash
-./bin/pilot build sampleapp-site
-./bin/pilot qa sampleapp-site
-
-./bin/pilot build exampleapp-site
-./bin/pilot qa exampleapp-site
-
-./bin/pilot build demoapp-site
-./bin/pilot qa demoapp-site
+./bin/pilot build my-site
+./bin/pilot qa my-site
 ```
 
 These commands use the configured local workspace, build only, and capture

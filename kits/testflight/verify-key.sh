@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Quick sanity check that your App Store Connect API key works, WITHOUT
 # building anything. Lists apps visible to the key. Run this right after you
-# fill in config.sh to confirm the credentials are correct.
+# fill in config.local.sh (or config.sh) to confirm the credentials are correct.
 #
 #   ./verify-key.sh
 
@@ -41,6 +41,6 @@ print(f"\nKey works. {len(apps)} app(s) visible to this key:")
 for a in apps:
     attr = a.get("attributes", {})
     print(f"  - {attr.get('name','?')}  [{attr.get('bundleId','?')}]")
-print("\nIf Example App / DemoApp are NOT listed, create their app records in")
+print("\nIf one of your apps is NOT listed, create its app record in")
 print("App Store Connect first (see README.md, step 3).")
 PY

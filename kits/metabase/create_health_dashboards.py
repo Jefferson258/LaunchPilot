@@ -1,23 +1,29 @@
 #!/usr/bin/env python3
-"""Create (or refresh) one Metabase health dashboard each for Example App and Sample App.
+"""Create (or refresh) one Metabase health dashboard per product.
 
-Idempotent by card/dashboard name. Secrets stay in supabase-connections.env.
+Products come from gitignored dashboards.local.json (template:
+dashboards.example.json). Secrets (Metabase admin login) stay in gitignored
+supabase-connections.env. Idempotent by card/dashboard name.
+
+Each product needs an events table (event_name, created_at) and an errors
+table (severity, message, screen, created_at) — the shape kits/analytics
+writes. Usage:
+
+  python3 create_health_dashboards.py
 """
 
 from __future__ import annotations
 
 import json
+import os
 import urllib.error
 import urllib.request
 from pathlib import Path
 
 DIR = Path(__file__).resolve().parent
 ENV_PATH = DIR / "supabase-connections.env"
-BASE = "http://localhost:3000"
+CONFIG_PATH = Path(os.environ.get("METABASE_DASHBOARDS_FILE") or DIR / "dashboards.local.json")
 IDS_PATH = DIR / "metabase-db-ids.json"
-
-EXAMPLEAPP_DB = 2
-SAMPLEAPP_DB = 3
 
 
 def load_cfg() -> dict:
@@ -28,6 +34,18 @@ def load_cfg() -> dict:
         k, v = line.split("=", 1)
         cfg[k.strip()] = v.strip()
     return cfg
+
+
+def load_products() -> tuple[dict, list[dict]]:
+    if not CONFIG_PATH.is_file():
+        raise SystemExit(
+            f"Missing {CONFIG_PATH}. Copy dashboards.example.json to dashboards.local.json and edit."
+        )
+    data = json.loads(CONFIG_PATH.read_text())
+    return data, data.get("products") or []
+
+
+BASE = os.environ.get("METABASE_URL", "http://localhost:3000")
 
 
 def api(method: str, path: str, token: str | None = None, payload=None, allow_error: bool = False):
@@ -193,302 +211,69 @@ LINE = lambda dim, metrics, x, y: {
 }
 
 
-def exampleapp_cards():
-    return [
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Events today",
-            """
-            select coalesce(sum(event_count), 0)::int as "Events today"
-            from v_exampleapp_analytics_daily
-            where day = (timezone('America/Chicago', now()))::date
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Errors last 24 hours",
-            """
-            select count(*)::int as "Errors last 24 hours"
-            from exampleapp_app_errors
-            where created_at > now() - interval '24 hours'
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Errors last 7 days",
-            """
-            select coalesce(sum(error_count), 0)::int as "Errors last 7 days"
-            from v_exampleapp_app_errors_daily
-            where day >= (timezone('America/Chicago', now()))::date - 6
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Slips last 7 days",
-            """
-            select slips_last_7d as "Slips last 7 days"
-            from v_exampleapp_product_counts
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Events per day (14 days)",
-            """
-            select gs::date as day, coalesce(sum(v.event_count), 0)::int as events
-            from generate_series(
-                ((timezone('America/Chicago', now()))::date - 13)::timestamp,
-                (timezone('America/Chicago', now()))::date::timestamp,
-                interval '1 day'
-            ) gs
-            left join v_exampleapp_analytics_daily v on v.day = gs::date
-            group by 1
-            order by 1
-            """,
-            "line",
-            LINE("day", "events", "Day", "Events"),
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · What people did (7 days)",
-            """
-            select event_name as event, coalesce(sum(event_count), 0)::int as count
-            from v_exampleapp_analytics_daily
-            where day >= (timezone('America/Chicago', now()))::date - 6
-            group by 1
-            order by 2 desc
-            """,
-            "bar",
-            BAR("event", "count", "Event", "Count"),
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Errors per day (14 days)",
-            """
-            select gs::date as day, coalesce(sum(v.error_count), 0)::int as errors
-            from generate_series(
-                ((timezone('America/Chicago', now()))::date - 13)::timestamp,
-                (timezone('America/Chicago', now()))::date::timestamp,
-                interval '1 day'
-            ) gs
-            left join v_exampleapp_app_errors_daily v on v.day = gs::date
-            group by 1
-            order by 1
-            """,
-            "line",
-            LINE("day", "errors", "Day", "Errors"),
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Slips submitted vs settled (14 days)",
-            """
-            select gs::date as day,
-                   coalesce(s.slips_submitted, 0)::int as submitted,
-                   coalesce(s.slip_wins, 0)::int as wins,
-                   coalesce(s.slip_losses, 0)::int as losses
-            from generate_series(
-                ((timezone('America/Chicago', now()))::date - 13)::timestamp,
-                (timezone('America/Chicago', now()))::date::timestamp,
-                interval '1 day'
-            ) gs
-            left join v_exampleapp_slip_events_daily s on s.day = gs::date
-            order by 1
-            """,
-            "line",
-            LINE("day", ["submitted", "wins", "losses"], "Day", "Slips"),
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Product snapshot",
-            """
-            select metric as "Metric", value as "Value"
-            from (
-              select 1 as ord, 'Total slips' as metric, total_slips::text as value from v_exampleapp_product_counts
-              union all select 2, 'Slips last 7 days', slips_last_7d::text from v_exampleapp_product_counts
-              union all select 3, 'Play outcomes', total_play_outcomes::text from v_exampleapp_product_counts
-              union all select 4, 'Friendships', total_friendships::text from v_exampleapp_product_counts
-              union all select 5, 'Pending friend requests', pending_friend_requests::text from v_exampleapp_product_counts
-              union all select 6, 'Groups', total_groups::text from v_exampleapp_product_counts
-              union all select 7, 'Group memberships', total_group_memberships::text from v_exampleapp_product_counts
-            ) s
-            order by ord
-            """,
-            "table",
-            {"table.pivot": False},
-        ),
-        native_card(
-            EXAMPLEAPP_DB,
-            "Example App · Latest errors",
-            """
-            select
-              created_at as "When",
-              severity as "Severity",
-              coalesce(nullif(screen, ''), '(unknown)') as "Screen",
-              left(message, 180) as "Message"
-            from exampleapp_app_errors
-            order by created_at desc
-            limit 25
-            """,
-            "table",
-            {"table.pivot": False},
-        ),
-    ]
 
-
-def sampleapp_cards():
+def product_cards(p: dict, tz: str) -> list[dict]:
+    db = int(p["metabase_db_id"])
+    label = p["label"]
+    ev = p.get("events_table", "analytics_events")
+    er = p.get("errors_table", "app_errors")
+    today = f"(timezone('{tz}', now()))::date"
+    series14 = f"""
+            generate_series(
+                ({today} - 13)::timestamp,
+                {today}::timestamp,
+                interval '1 day'
+            ) as gs"""
     return [
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Events today",
-            """
-            select coalesce(sum(event_count), 0)::int as "Events today"
-            from v_analytics_daily
-            where day = (timezone('America/Chicago', now()))::date
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Errors last 24 hours",
-            """
-            select count(*)::int as "Errors last 24 hours"
-            from app_errors
+        native_card(db, f"{label} · Events today", f"""
+            select count(*)::int as "Events today" from {ev}
+            where (timezone('{tz}', created_at))::date = {today}
+            """, "scalar", SCALAR),
+        native_card(db, f"{label} · Errors last 24 hours", f"""
+            select count(*)::int as "Errors last 24 hours" from {er}
             where created_at > now() - interval '24 hours'
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Posts last 7 days",
-            """
-            select posts_last_7d as "Posts last 7 days"
-            from v_product_social_counts
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Workout-post reports (7 days)",
-            """
-            select coalesce(sum(report_count), 0)::int as "Reports last 7 days"
-            from v_workout_post_reports_daily
-            where report_day_utc >= (timezone('America/Chicago', now()))::date - 6
-            """,
-            "scalar",
-            SCALAR,
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Events per day (14 days)",
-            """
-            select gs::date as day, coalesce(sum(v.event_count), 0)::int as events
-            from generate_series(
-                ((timezone('America/Chicago', now()))::date - 13)::timestamp,
-                (timezone('America/Chicago', now()))::date::timestamp,
-                interval '1 day'
-            ) gs
-            left join v_analytics_daily v on v.day = gs::date
-            group by 1
-            order by 1
-            """,
-            "line",
-            LINE("day", "events", "Day", "Events"),
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · What people did (7 days)",
-            """
-            select event_name as event, coalesce(sum(event_count), 0)::int as count
-            from v_analytics_daily
-            where day >= (timezone('America/Chicago', now()))::date - 6
-            group by 1
-            order by 2 desc
-            """,
-            "bar",
-            BAR("event", "count", "Event", "Count"),
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Posts, likes, follows per day",
-            """
-            select gs::date as day,
-                   coalesce(s.posts, 0)::int as posts,
-                   coalesce(s.likes, 0)::int as likes,
-                   coalesce(s.follows, 0)::int as follows
-            from generate_series(
-                ((timezone('America/Chicago', now()))::date - 13)::timestamp,
-                (timezone('America/Chicago', now()))::date::timestamp,
-                interval '1 day'
-            ) gs
-            left join v_product_social_daily s on s.day = gs::date
-            order by 1
-            """,
-            "line",
-            LINE("day", ["posts", "likes", "follows"], "Day", "Count"),
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Errors per day (14 days)",
-            """
-            select gs::date as day, coalesce(sum(v.error_count), 0)::int as errors
-            from generate_series(
-                ((timezone('America/Chicago', now()))::date - 13)::timestamp,
-                (timezone('America/Chicago', now()))::date::timestamp,
-                interval '1 day'
-            ) gs
-            left join v_app_errors_daily v on v.day = gs::date
-            group by 1
-            order by 1
-            """,
-            "line",
-            LINE("day", "errors", "Day", "Errors"),
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Product snapshot",
-            """
-            select metric as "Metric", value as "Value"
-            from (
-              select 1 as ord, 'Total posts' as metric, total_posts::text as value from v_product_social_counts
-              union all select 2, 'Posts last 7 days', posts_last_7d::text from v_product_social_counts
-              union all select 3, 'Total likes', total_likes::text from v_product_social_counts
-              union all select 4, 'Likes last 7 days', likes_last_7d::text from v_product_social_counts
-              union all select 5, 'Total follows', total_follows::text from v_product_social_counts
-              union all select 6, 'Follows last 7 days', follows_last_7d::text from v_product_social_counts
-              union all select 7, 'Rep-detection sets', total_sets::text from v_rep_detection_global
-              union all select 8, 'Rep-detection matches', match_count::text from v_rep_detection_global
-            ) s
-            order by ord
-            """,
-            "table",
-            {"table.pivot": False},
-        ),
-        native_card(
-            SAMPLEAPP_DB,
-            "Sample App · Latest errors",
-            """
-            select
-              created_at as "When",
-              severity as "Severity",
-              coalesce(nullif(screen, ''), '(unknown)') as "Screen",
-              left(message, 180) as "Message"
-            from app_errors
-            order by created_at desc
-            limit 25
-            """,
-            "table",
-            {"table.pivot": False},
-        ),
+            """, "scalar", SCALAR),
+        native_card(db, f"{label} · Errors last 7 days", f"""
+            select count(*)::int as "Errors last 7 days" from {er}
+            where created_at > now() - interval '7 days'
+            """, "scalar", SCALAR),
+        native_card(db, f"{label} · Events last 7 days", f"""
+            select count(*)::int as "Events last 7 days" from {ev}
+            where created_at > now() - interval '7 days'
+            """, "scalar", SCALAR),
+        native_card(db, f"{label} · Events per day (14 days)", f"""
+            select gs::date as "Day", coalesce(count(e.*), 0)::int as "Events"
+            from {series14}
+            left join {ev} e on (timezone('{tz}', e.created_at))::date = gs::date
+            group by 1 order by 1
+            """, "line", LINE("Day", "Events", "Day", "Events")),
+        native_card(db, f"{label} · What people did (7 days)", f"""
+            select event_name as "Event", count(*)::int as "Count" from {ev}
+            where created_at > now() - interval '7 days'
+            group by 1 order by 2 desc limit 15
+            """, "bar", BAR("Event", "Count", "Event", "Count")),
+        native_card(db, f"{label} · Errors per day (14 days)", f"""
+            select gs::date as "Day", coalesce(count(e.*), 0)::int as "Errors"
+            from {series14}
+            left join {er} e on (timezone('{tz}', e.created_at))::date = gs::date
+            group by 1 order by 1
+            """, "line", LINE("Day", "Errors", "Day", "Errors")),
+        native_card(db, f"{label} · Errors by screen (7 days)", f"""
+            select coalesce(nullif(screen, ''), '(unknown)') as "Screen", count(*)::int as "Errors"
+            from {er} where created_at > now() - interval '7 days'
+            group by 1 order by 2 desc limit 15
+            """, "bar", BAR("Screen", "Errors", "Screen", "Errors")),
+        native_card(db, f"{label} · Errors by severity (7 days)", f"""
+            select severity as "Severity", count(*)::int as "Errors"
+            from {er} where created_at > now() - interval '7 days'
+            group by 1 order by 2 desc
+            """, "table", {"table.pivot": False}),
+        native_card(db, f"{label} · Latest errors", f"""
+            select created_at as "When", severity as "Severity",
+                   coalesce(nullif(screen, ''), '(unknown)') as "Screen",
+                   left(message, 180) as "Message"
+            from {er} order by created_at desc limit 25
+            """, "table", {"table.pivot": False}),
     ]
 
 
@@ -543,88 +328,29 @@ def save_dashboard(token: str, dash_id: int, name: str, description: str, collec
 
 
 def main() -> None:
+    data, products = load_products()
+    tz = data.get("timezone", "UTC")
     cfg = load_cfg()
     token = login(cfg)
     ids_file = json.loads(IDS_PATH.read_text()) if IDS_PATH.exists() else {}
-    global EXAMPLEAPP_DB, SAMPLEAPP_DB
-    EXAMPLEAPP_DB = int(ids_file.get("EXAMPLEAPP") or EXAMPLEAPP_DB)
-    SAMPLEAPP_DB = int(ids_file.get("SAMPLEAPP") or SAMPLEAPP_DB)
-
-    collection_id = upsert_collection(token, "App health")
-
-    exampleapp_specs = exampleapp_cards()
-    exampleapp_ids = [upsert_card(token, collection_id, spec) for spec in exampleapp_specs]
-    # events_today, errors_24h, errors_7d, slips_7d, events_day, event_mix, errors_day, slips_day, snapshot, latest
-    jmap = {
-        "events_today": exampleapp_ids[0],
-        "errors_24h": exampleapp_ids[1],
-        "third": exampleapp_ids[2],
-        "fourth": exampleapp_ids[3],
-        "events_day": exampleapp_ids[4],
-        "event_mix": exampleapp_ids[5],
-        "left_chart": exampleapp_ids[6],
-        "right_chart": exampleapp_ids[7],
-        "snapshot": exampleapp_ids[8],
-        "latest_errors": exampleapp_ids[9],
-    }
-    jdesc = (
-        "One-screen Example App health. Errors last 24 hours should stay at 0. "
-        "Zeros are expected until TestFlight traffic writes events."
-    )
-    jdash = upsert_dashboard(token, "Example App health", jdesc, collection_id)
-    save_dashboard(
-        token,
-        jdash,
-        "Example App health",
-        jdesc,
-        collection_id,
-        layout_health(
-            jdash,
-            jmap,
-            "## Example App health\n"
+    collection_id = upsert_collection(token, data.get("collection", "App health"))
+    keys = ["events_today", "errors_24h", "third", "fourth", "events_day",
+            "event_mix", "left_chart", "right_chart", "snapshot", "latest_errors"]
+    for p in products:
+        if ids_file.get(p.get("env_prefix", "")):
+            p["metabase_db_id"] = ids_file[p["env_prefix"]]
+        specs = product_cards(p, tz)
+        ids = [upsert_card(token, collection_id, spec) for spec in specs]
+        name = f"{p['label']} health"
+        desc = f"One-screen {p['label']} health. Errors last 24 hours should stay at 0."
+        dash = upsert_dashboard(token, name, desc, collection_id)
+        intro = (
+            f"## {p['label']} health\n"
             "**Errors last 24 hours** is the first thing to check — it should stay at **0**. "
-            "Events, slips, and social counts stay at 0 until people use the app. "
-            "If events are 0 but errors jump, something is wrong.",
-        ),
-    )
-
-    sampleapp_specs = sampleapp_cards()
-    sampleapp_ids = [upsert_card(token, collection_id, spec) for spec in sampleapp_specs]
-    cmap = {
-        "events_today": sampleapp_ids[0],
-        "errors_24h": sampleapp_ids[1],
-        "third": sampleapp_ids[2],
-        "fourth": sampleapp_ids[3],
-        "events_day": sampleapp_ids[4],
-        "event_mix": sampleapp_ids[5],
-        "left_chart": sampleapp_ids[6],
-        "right_chart": sampleapp_ids[7],
-        "snapshot": sampleapp_ids[8],
-        "latest_errors": sampleapp_ids[9],
-    }
-    cdesc = (
-        "One-screen Sample App health. Errors last 24 hours should stay at 0. "
-        "Reports last 7 days is moderation. Workout posts/likes are product activity."
-    )
-    cdash = upsert_dashboard(token, "Sample App health", cdesc, collection_id)
-    save_dashboard(
-        token,
-        cdash,
-        "Sample App health",
-        cdesc,
-        collection_id,
-        layout_health(
-            cdash,
-            cmap,
-            "## Sample App health\n"
-            "**Errors last 24 hours** should stay at **0**. "
-            "**Reports last 7 days** is moderation. "
-            "Events and social charts fill in as people open the app and post workouts.",
-        ),
-    )
-
-    print(f"Example App health  http://localhost:3000/dashboard/{jdash}")
-    print(f"Sample App health http://localhost:3000/dashboard/{cdash}")
+            "Event charts stay flat until people use the app."
+        )
+        save_dashboard(token, dash, name, desc, collection_id, layout_health(dash, dict(zip(keys, ids)), intro))
+        print(f"{name}  {BASE}/dashboard/{dash}")
 
 
 if __name__ == "__main__":

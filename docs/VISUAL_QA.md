@@ -1,6 +1,6 @@
 # Visual QA — LaunchPilot
 
-How screenshot QA works across Sample App / Example App / Demo App (apps + sites), and how
+How screenshot QA works across your apps and sites, and how
 to keep it deep and consistent.
 
 ## Command
@@ -22,7 +22,7 @@ Env:
 ## Shared kit (`kits/qa/`)
 
 - **`ios-uitest-capture.sh`** — pick sim → boot → run N UITests → count PNGs  
-  Used by Sample App + Example App `scripts/capture-qa-screenshots.sh`.
+  Wrap it from each app's `scripts/capture-qa-screenshots.sh`.
 - **`web-capture.mjs`** — Playwright desktop + mobile heroes, scroll slices,
   full-page, multi-route (skips HTTP ≥400). Used by all three marketing sites.
 - Product-specific chrome (FakeSocial, `-QATab`, friend-code cloud test) stays
@@ -34,10 +34,10 @@ See [kits/qa/README.md](../kits/qa/README.md).
 
 | Product | Capture surface | Required / min |
 |---------|-----------------|----------------|
-| `sampleapp-app` | Home, Workout, Progress, Social, Groups (FakeSocial) | 5 PNGs + named required |
-| `exampleapp-app` | Play, Tourney, Dashboard, Friends, Profile + **cloud friend code** (`05-friends-cloud.png` in deep) | ≥5 required tab shots |
-| `demoapp-app` | Home, Closet (+ filters + item editor in deep), Today, Calendar | ≥6 required |
-| `*-site` | `/`, `/privacy`, `/terms` (+ Example App `/contest-rules`) × desktop + mobile + scrolls | `qa_min_pngs` 8–10 |
+| `my-app` | Home, Workout, Progress, Social, Groups (FakeSocial) | 5 PNGs + named required |
+| `my-app` | Play, Tourney, Dashboard, Friends, Profile + **cloud friend code** (`05-friends-cloud.png` in deep) | ≥5 required tab shots |
+| `my-app` | Home, Closet (+ filters + item editor in deep), Today, Calendar | ≥6 required |
+| `*-site` | `/`, `/privacy`, `/terms` (+ any legal routes your product needs) × desktop + mobile + scrolls | `qa_min_pngs` 8–10 |
 
 ## `products.json` fields
 
@@ -58,9 +58,9 @@ invoked from `pilot run`.
 ## Adding a new product
 
 1. Apps: add UITest(s) that write PNGs under `qa-screenshots/`, wrap with
-   `kits/qa/ios-uitest-capture.sh` (copy Example App’s script).
+   `kits/qa/ios-uitest-capture.sh`.
 2. Sites: thin `scripts/capture-qa-screenshots.mjs` that calls
-   `web-capture.mjs` with your routes (copy Sample App-Website’s script).
+   `web-capture.mjs` with your routes.
 3. Register `qa_*` fields in `config/products.json`.
 4. Smoke: `./bin/pilot qa <product>`.
 

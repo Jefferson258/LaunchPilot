@@ -4,10 +4,8 @@
 # flaky, falls back to generic/platform=iOS (device SDK) which still catches
 # compile errors before archive.
 #
-#   ./build-check.sh exampleapp
-#   ./build-check.sh demoapp
-#   ./build-check.sh sampleapp
-#   ./build-check.sh all
+#   ./build-check.sh <app-key>
+#   ./build-check.sh all        # every key in the apps registry
 #
 # Exit code is non-zero if any build fails.
 
@@ -71,9 +69,9 @@ check_one() {
 target="${1:-all}"
 fail=0
 if [[ "$target" == "all" || "$target" == "both" ]]; then
-  check_one exampleapp || fail=1
-  check_one demoapp || fail=1
-  check_one sampleapp || fail=1
+  for key in $(tf_app_keys); do
+    check_one "$key" || fail=1
+  done
 else
   check_one "$target" || fail=1
 fi

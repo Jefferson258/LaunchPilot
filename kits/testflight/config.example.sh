@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Copy this file to config.sh and fill in your real values.
-#   cp config.example.sh config.sh
-# config.sh is gitignored so your keys never get committed.
+# Copy this file to config.local.sh (or config.sh) and fill in your values.
+#   cp config.example.sh config.local.sh
+# Both names are gitignored so your keys never get committed.
 #
 # Full walkthrough: ../../docs/SETUP.md
 
@@ -17,3 +17,9 @@ export TEAM_ID="YOUR_TEAM_ID"
 export ASC_KEY_ID="XXXXXXXXXX"
 export ASC_ISSUER_ID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 export ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_XXXXXXXXXX.p8"
+
+# --- TestFlight group attach (optional) ------------------------------------
+# post-upload.sh always attaches builds to internal groups. To also attach to
+# external groups for every app, list their ids here (or per app in the
+# registry via EXTERNAL_BETA_GROUP_IDS). Leave empty for internal only.
+# export TF_EXTERNAL_BETA_GROUP_IDS=""

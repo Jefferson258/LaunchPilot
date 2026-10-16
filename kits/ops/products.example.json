@@ -1,0 +1,13 @@
+{
+  "_comment": "Copy to products.local.json (gitignored). One entry per Supabase-backed product. ref = Supabase project ref; repo = folder under PILOT_WORKSPACE (must be `supabase link`ed); table = app errors table; gh_repo = owner/repo for alert issues (optional); pilot_product = key in config/products.json.",
+  "products": {
+    "example": {
+      "ref": "YOUR_SUPABASE_PROJECT_REF",
+      "repo": "ExampleApp",
+      "table": "app_errors",
+      "gh_repo": "your-org/example-app",
+      "label": "Example App",
+      "pilot_product": "example-app"
+    }
+  }
+}

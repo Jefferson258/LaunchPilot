@@ -35,15 +35,15 @@ editable App Store version before Submit for Review:
 
 ```bash
 # Regular / immediate (default) — dry-run then confirm
-./bin/pilot appstore-submit exampleapp-app --dry-run
-./bin/pilot appstore-submit exampleapp-app --confirm
+./bin/pilot appstore-submit my-app --dry-run
+./bin/pilot appstore-submit my-app --confirm
 
 # Phased Release (7-day ramp for automatic updates only)
-./bin/pilot appstore-submit exampleapp-app --dry-run --phased
-./bin/pilot appstore-submit exampleapp-app --confirm --phased
+./bin/pilot appstore-submit my-app --dry-run --phased
+./bin/pilot appstore-submit my-app --confirm --phased
 
 # Explicit regular (same as omitting both flags; cancels a planned INACTIVE phased release)
-./bin/pilot appstore-submit exampleapp-app --confirm --no-phased
+./bin/pilot appstore-submit my-app --confirm --no-phased
 ```
 
 Phased Release applies to **version updates only** (not the first public

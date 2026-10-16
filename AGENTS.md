@@ -48,7 +48,7 @@ submit. Do not put `--ship-appstore` in phone Shortcuts by default.
 - The deterministic pipeline is bash; the coding step is `agent/run-agent.mjs`
   via the Cursor SDK and needs `CURSOR_API_KEY`.
 - Reuses bundled `kits/testflight`, `kits/appstore`, and `kits/qa`. Secrets stay
-  in gitignored `config.sh` / `apps.sh` / `pilot.env` — see `docs/SETUP.md`.
+  in gitignored `config.local.sh` / `apps.local.sh` / `*.local.json` / `pilot.env` — see `docs/SETUP.md`.
 - Product registry lives in gitignored `config/products.json` (copy from
   `products.example.json`). Bundled smoke test: `./bin/pilot demo`.
 - `repo` values under `examples/` resolve inside the LaunchPilot checkout.
